@@ -31,18 +31,20 @@ function App() {
   const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
-    // Simulate initial loading
+    // Skip video intro and show app immediately
     const timer = setTimeout(() => {
       setIsLoading(false);
-      setShowVideo(true);
-    }, 100);
+      setShowVideo(false);
+      setAppReady(true);
+    }, 1500); // Short delay for smooth transition
 
     return () => clearTimeout(timer);
   }, []);
 
   const handleLoadComplete = () => {
     setIsLoading(false);
-    setShowVideo(true);
+    setShowVideo(false);
+    setAppReady(true);
   };
 
   const handleVideoEnd = () => {
