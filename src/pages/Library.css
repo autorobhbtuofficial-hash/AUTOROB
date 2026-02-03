@@ -1,0 +1,127 @@
+.library-page {
+    padding-top: 80px;
+    min-height: 100vh;
+}
+
+.library-hero {
+    padding: 6rem 0 4rem;
+    text-align: center;
+}
+
+.library-section {
+    padding: 2rem 0 4rem;
+}
+
+.library-filters {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.resource-card {
+    padding: 2rem;
+    transition: all var(--transition-base);
+}
+
+.resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.resource-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    font-size: 1.5rem;
+}
+
+.resource-icon.pdf {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.resource-icon.video {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.resource-icon.github {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.resource-category {
+    padding: 0.25rem 0.75rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--accent-secondary);
+}
+
+.resource-title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.resource-description {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    min-height: 60px;
+}
+
+.resource-footer {
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.resource-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.resource-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.resource-footer .btn {
+    width: 100%;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.no-resources {
+    text-align: center;
+    padding: 4rem 0;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .resources-grid {
+        grid-template-columns: 1fr;
+    }
+}

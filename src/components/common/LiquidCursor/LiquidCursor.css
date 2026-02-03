@@ -1,0 +1,41 @@
+.liquid-cursor,
+.liquid-cursor-inner {
+    position: fixed;
+    pointer-events: none;
+    z-index: var(--z-cursor);
+    mix-blend-mode: difference;
+}
+
+.liquid-cursor {
+    width: 60px;
+    height: 60px;
+    margin-left: -30px;
+    margin-top: -30px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            rgba(99, 102, 241, 0.6) 0%,
+            rgba(139, 92, 246, 0.4) 50%,
+            rgba(168, 85, 247, 0.2) 100%);
+    filter: blur(20px);
+    opacity: 0.8;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.liquid-cursor-inner {
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
+}
+
+/* Hide on touch devices */
+@media (hover: none) and (pointer: coarse) {
+
+    .liquid-cursor,
+    .liquid-cursor-inner {
+        display: none;
+    }
+}
