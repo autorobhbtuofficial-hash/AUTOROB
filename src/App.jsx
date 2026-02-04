@@ -21,6 +21,7 @@ import Gallery from './pages/Gallery';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import AdminPanel from './pages/AdminPanel';
 
 // Styles
 import './styles/globals.css';
@@ -90,6 +91,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminPanel />} />
               </Routes>
             </>
           )}

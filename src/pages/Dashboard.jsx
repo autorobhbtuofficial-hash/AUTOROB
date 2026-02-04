@@ -71,6 +71,17 @@ const Dashboard = () => {
                     ))}
                 </nav>
 
+                {/* Admin Panel Button - Only for admin/subadmin */}
+                {(userRole === 'admin' || userRole === 'subadmin') && (
+                    <button
+                        className="sidebar-admin-btn interactive"
+                        onClick={() => navigate('/admin')}
+                    >
+                        <i className="fas fa-user-shield"></i>
+                        <span>Admin Panel</span>
+                    </button>
+                )}
+
                 <button className="sidebar-logout interactive" onClick={handleLogout}>
                     <i className="fas fa-sign-out-alt"></i>
                     <span>Logout</span>

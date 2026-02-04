@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { getAllTeamMembers } from '../services/adminService';
 import Footer from '../components/common/Footer/Footer';
 import './Team.css';
 
@@ -15,91 +14,57 @@ const Team = () => {
 
     const fetchTeamMembers = async () => {
         try {
-            const querySnapshot = await getDocs(collection(db, 'team'));
-            const members = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setTeamMembers(members);
+            const result = await getAllTeamMembers();
+            if (result.success) {
+                // Filter only active members
+                const activeMembers = result.data.filter(m => m.isActive !== false);
+                setTeamMembers(activeMembers);
+            } else {
+                console.error('Error fetching team members:', result.error);
+                setTeamMembers([]);
+            }
         } catch (error) {
             console.error('Error fetching team members:', error);
-            // Use demo data if Firebase fails
-            setTeamMembers(demoTeamData);
+            setTeamMembers([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const demoTeamData = [
-        {
-            id: '1',
-            name: 'Aryan Sharma',
-            role: 'President',
-            position: 'Lead',
-            image: 'https://ui-avatars.com/api/?name=Aryan+Sharma&size=400&background=6366f1&color=fff',
-            bio: 'Leading AUTOROB with passion for robotics and automation',
-            linkedin: 'https://linkedin.com',
-            github: 'https://github.com',
-            email: 'aryan@autorob.com'
-        },
-        {
-            id: '2',
-            name: 'Priya Verma',
-            role: 'Vice President',
-            position: 'Lead',
-            image: 'https://ui-avatars.com/api/?name=Priya+Verma&size=400&background=8b5cf6&color=fff',
-            bio: 'Passionate about AI and machine learning integration',
-            linkedin: 'https://linkedin.com',
-            github: 'https://github.com',
-            email: 'priya@autorob.com'
-        },
-        {
-            id: '3',
-            name: 'Rahul Kumar',
-            role: 'Technical Head',
-            position: 'Core',
-            image: 'https://ui-avatars.com/api/?name=Rahul+Kumar&size=400&background=ec4899&color=fff',
-            bio: 'Expert in embedded systems and IoT',
-            linkedin: 'https://linkedin.com',
-            github: 'https://github.com',
-            email: 'rahul@autorob.com'
-        },
-        {
-            id: '4',
-            name: 'Sneha Patel',
-            role: 'Design Head',
-            position: 'Core',
-            image: 'https://ui-avatars.com/api/?name=Sneha+Patel&size=400&background=f59e0b&color=fff',
-            bio: 'Creating stunning designs for robotics projects',
-            linkedin: 'https://linkedin.com',
-            github: 'https://github.com',
-            email: 'sneha@autorob.com'
-        },
-        {
-            id: '5',
-            name: 'Amit Singh',
-            role: 'Event Coordinator',
-            position: 'Core',
-            image: 'https://ui-avatars.com/api/?name=Amit+Singh&size=400&background=10b981&color=fff',
-            bio: 'Organizing amazing robotics events and workshops',
-            linkedin: 'https://linkedin.com',
-            github: 'https://github.com',
-            email: 'amit@autorob.com'
-        },
-        {
-            id: '6',
-            name: 'Neha Gupta',
-            role: 'PR Head',
-            position: 'Core',
-            image: 'https://ui-avatars.com/api/?name=Neha+Gupta&size=400&background=3b82f6&color=fff',
-            bio: 'Building connections and spreading awareness',
-            linkedin: 'https://linkedin.com',
-            github: 'https://github.com',
-            email: 'neha@autorob.com'
-        }
-    ];
+    // Define year order and role hierarchy
+    const yearOrder = ['Final Year', '3rd Year', '2nd Year', '1st Year'];
 
-    const positions = ['Lead', 'Core', 'Member'];
+    const roleHierarchy = {
+        'President': 1,
+        'Vice President': 2,
+        'General Secretary': 3,
+        'Technical Head': 4,
+        'Creative Head': 5,
+        'Event Head': 6,
+        'PR Head': 7,
+        'Treasurer': 8,
+        'Member': 99
+    };
+
+    // Group members by year
+    const groupedByYear = yearOrder.map(year => {
+        const yearMembers = teamMembers
+            .filter(m => m.year === year)
+            .sort((a, b) => {
+                // First sort by role hierarchy
+                const roleA = roleHierarchy[a.role] || 50;
+                const roleB = roleHierarchy[b.role] || 50;
+                if (roleA !== roleB) return roleA - roleB;
+
+                // Then by custom order
+                return (a.order || 999) - (b.order || 999);
+            });
+
+        return {
+            year,
+            members: yearMembers
+        };
+    }).filter(group => group.members.length > 0);
 
     return (
         <main className="team-page">
@@ -124,24 +89,32 @@ const Team = () => {
                 </div>
             </section>
 
-            {positions.map((position, posIndex) => {
-                const positionMembers = teamMembers.filter(m => m.position === position);
-                if (positionMembers.length === 0) return null;
-
-                return (
-                    <section key={position} className="team-section">
+            {loading ? (
+                <div className="loading-container">
+                    <div className="loader-spinner"></div>
+                    <p>Loading team members...</p>
+                </div>
+            ) : groupedByYear.length === 0 ? (
+                <div className="no-members-container">
+                    <i className="fas fa-users" style={{ fontSize: '4rem', opacity: 0.3, marginBottom: '1rem' }}></i>
+                    <p>No team members found. Add members from the admin panel!</p>
+                </div>
+            ) : (
+                groupedByYear.map((group, groupIndex) => (
+                    <section key={group.year} className="team-section">
                         <div className="container">
                             <motion.h2
                                 className="section-title gradient-text"
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
+                                transition={{ delay: groupIndex * 0.1 }}
                             >
-                                {position} Team
+                                {group.year} Team
                             </motion.h2>
 
                             <div className="team-grid">
-                                {positionMembers.map((member, index) => (
+                                {group.members.map((member, index) => (
                                     <motion.div
                                         key={member.id}
                                         className="team-card glass-card interactive"
@@ -152,26 +125,33 @@ const Team = () => {
                                         whileHover={{ y: -10 }}
                                     >
                                         <div className="team-card-image">
-                                            <img src={member.image} alt={member.name} />
+                                            <img
+                                                src={member.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&size=400&background=6366f1&color=fff`}
+                                                alt={member.name}
+                                                onError={(e) => {
+                                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&size=400&background=6366f1&color=fff`;
+                                                }}
+                                            />
                                         </div>
                                         <div className="team-card-content">
                                             <h3 className="team-card-name">{member.name}</h3>
                                             <p className="team-card-role gradient-text">{member.role}</p>
-                                            <p className="team-card-bio">{member.bio}</p>
+                                            <p className="team-card-department">{member.department}</p>
+                                            {member.bio && <p className="team-card-bio">{member.bio}</p>}
                                             <div className="team-card-socials">
-                                                {member.linkedin && (
-                                                    <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="social-link interactive">
+                                                {member.socialLinks?.linkedin && (
+                                                    <a href={member.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="social-link interactive">
                                                         <i className="fab fa-linkedin"></i>
                                                     </a>
                                                 )}
-                                                {member.github && (
-                                                    <a href={member.github} target="_blank" rel="noopener noreferrer" className="social-link interactive">
+                                                {member.socialLinks?.github && (
+                                                    <a href={member.socialLinks.github} target="_blank" rel="noopener noreferrer" className="social-link interactive">
                                                         <i className="fab fa-github"></i>
                                                     </a>
                                                 )}
-                                                {member.email && (
-                                                    <a href={`mailto:${member.email}`} className="social-link interactive">
-                                                        <i className="fas fa-envelope"></i>
+                                                {member.socialLinks?.instagram && (
+                                                    <a href={member.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="social-link interactive">
+                                                        <i className="fab fa-instagram"></i>
                                                     </a>
                                                 )}
                                             </div>
@@ -181,13 +161,7 @@ const Team = () => {
                             </div>
                         </div>
                     </section>
-                );
-            })}
-
-            {loading && (
-                <div className="loading-container">
-                    <div className="loader-spinner"></div>
-                </div>
+                ))
             )}
 
             <Footer />
