@@ -18,6 +18,7 @@ import Team from './pages/Team';
 import Events from './pages/Events';
 import Library from './pages/Library';
 import Gallery from './pages/Gallery';
+import News from './pages/News';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -87,6 +88,7 @@ function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/gallery" element={<Gallery />} />
+                <Route path="/news" element={<News />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Login />} />

@@ -47,24 +47,33 @@ const Team = () => {
     };
 
     // Group members by year
-    const groupedByYear = yearOrder.map(year => {
+    // Group members by year
+    const standardGroups = yearOrder.map(year => {
         const yearMembers = teamMembers
             .filter(m => m.year === year)
             .sort((a, b) => {
-                // First sort by role hierarchy
                 const roleA = roleHierarchy[a.role] || 50;
                 const roleB = roleHierarchy[b.role] || 50;
                 if (roleA !== roleB) return roleA - roleB;
-
-                // Then by custom order
                 return (a.order || 999) - (b.order || 999);
             });
 
-        return {
-            year,
-            members: yearMembers
-        };
+        return { year, members: yearMembers };
     }).filter(group => group.members.length > 0);
+
+    // Handle custom years (e.g. Alumni, Former Members)
+    const otherMembers = teamMembers.filter(m => !yearOrder.includes(m.year));
+    const otherYears = [...new Set(otherMembers.map(m => m.year))];
+
+    const otherGroups = otherYears.map(year => {
+        const yearMembers = otherMembers
+            .filter(m => m.year === year)
+            .sort((a, b) => (a.order || 999) - (b.order || 999));
+
+        return { year, members: yearMembers };
+    });
+
+    const groupedByYear = [...standardGroups, ...otherGroups];
 
     return (
         <main className="team-page">

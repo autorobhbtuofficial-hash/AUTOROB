@@ -326,3 +326,21 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Fix for Select Dropdowns in Dark Mode */
+select {
+    background-color: var(--glass-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    padding: 0.75rem;
+    border-radius: 8px;
+    width: 100%;
+}
+
+select option {
+    background-color: #1a1a2e;
+    /* Dark background */
+    color: white;
+    /* White text */
+    padding: 10px;
+}

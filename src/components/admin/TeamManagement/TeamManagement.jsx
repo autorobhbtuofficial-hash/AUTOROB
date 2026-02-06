@@ -23,6 +23,7 @@ const TeamManagement = ({ userRole }) => {
         bio: '',
         socialLinks: { linkedin: '', github: '', instagram: '' },
         isActive: true,
+        isFeatured: false,
         order: 1
     });
     const [imageFile, setImageFile] = useState(null);
@@ -51,6 +52,7 @@ const TeamManagement = ({ userRole }) => {
             bio: '',
             socialLinks: { linkedin: '', github: '', instagram: '' },
             isActive: true,
+            isFeatured: false,
             order: members.length + 1
         });
         setImageFile(null);
@@ -67,6 +69,7 @@ const TeamManagement = ({ userRole }) => {
             bio: member.bio || '',
             socialLinks: member.socialLinks || { linkedin: '', github: '', instagram: '' },
             isActive: member.isActive !== undefined ? member.isActive : true,
+            isFeatured: member.isFeatured || false,
             order: member.order || 1
         });
         setImageFile(null);
@@ -129,6 +132,7 @@ const TeamManagement = ({ userRole }) => {
                 instagram: formData.socialLinks.instagram || ''
             },
             isActive: formData.isActive,
+            isFeatured: formData.isFeatured,
             order: Number(formData.order)
         };
 
@@ -230,22 +234,25 @@ const TeamManagement = ({ userRole }) => {
 
                         <div className="form-group">
                             <label>Role/Position *</label>
-                            <select
+                            <input
+                                type="text"
                                 value={formData.role}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                list="role-suggestions"
+                                placeholder="Enter role or select from suggestions"
                                 required
-                            >
-                                <option value="">Select Role</option>
-                                <option value="President">President</option>
-                                <option value="Vice President">Vice President</option>
-                                <option value="General Secretary">General Secretary</option>
-                                <option value="Technical Head">Technical Head</option>
-                                <option value="Creative Head">Creative Head</option>
-                                <option value="Event Head">Event Head</option>
-                                <option value="PR Head">PR Head</option>
-                                <option value="Treasurer">Treasurer</option>
-                                <option value="Member">Member</option>
-                            </select>
+                            />
+                            <datalist id="role-suggestions">
+                                <option value="President" />
+                                <option value="Vice President" />
+                                <option value="General Secretary" />
+                                <option value="Technical Head" />
+                                <option value="Creative Head" />
+                                <option value="Event Head" />
+                                <option value="PR Head" />
+                                <option value="Treasurer" />
+                                <option value="Member" />
+                            </datalist>
                         </div>
                     </div>
 
@@ -253,8 +260,14 @@ const TeamManagement = ({ userRole }) => {
                         <div className="form-group">
                             <label>Year *</label>
                             <select
-                                value={formData.year}
-                                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                value={['Final Year', '3rd Year', '2nd Year', '1st Year'].includes(formData.year) ? formData.year : 'Others'}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData({
+                                        ...formData,
+                                        year: val === 'Others' ? '' : val
+                                    });
+                                }}
                                 required
                             >
                                 <option value="">Select Year</option>
@@ -262,7 +275,19 @@ const TeamManagement = ({ userRole }) => {
                                 <option value="3rd Year">3rd Year</option>
                                 <option value="2nd Year">2nd Year</option>
                                 <option value="1st Year">1st Year</option>
+                                <option value="Others">Others</option>
                             </select>
+
+                            {/* Show text input if custom year or 'Others' is active */}
+                            {!['Final Year', '3rd Year', '2nd Year', '1st Year', ''].includes(formData.year) || (formData.year === '' && formData.year !== undefined) ? (
+                                <input
+                                    type="text"
+                                    value={formData.year}
+                                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                    placeholder="Specify Year / Group (e.g., Alumni)"
+                                    style={{ marginTop: '0.5rem' }}
+                                />
+                            ) : null}
                         </div>
 
                         <div className="form-group">
@@ -282,7 +307,7 @@ const TeamManagement = ({ userRole }) => {
                                 type="number"
                                 value={formData.order}
                                 onChange={(e) => setFormData({ ...formData, order: e.target.value })}
-                                min="1"
+                                min="1" // Start from 1
                                 placeholder="Order within year group"
                             />
                             <small style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
@@ -354,6 +379,17 @@ const TeamManagement = ({ userRole }) => {
                                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                             />
                             <span>Active Member</span>
+                        </label>
+                    </div>
+
+                    <div className="form-group checkbox-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={formData.isFeatured}
+                                onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                            />
+                            <span>Featured Member (Show on Home Page)</span>
                         </label>
                     </div>
 

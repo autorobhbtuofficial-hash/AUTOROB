@@ -80,13 +80,13 @@ const Events = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        {['all', 'Workshop', 'Competition', 'Seminar', 'Webinar', 'Hackathon'].map((type) => (
+                        {['all', ...Array.from(new Set(events.map(e => e.category).filter(Boolean)))].map((type) => (
                             <button
                                 key={type}
                                 className={`filter-btn interactive ${filter === type.toLowerCase() ? 'active' : ''}`}
                                 onClick={() => setFilter(type.toLowerCase())}
                             >
-                                {type}
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
                             </button>
                         ))}
                     </motion.div>

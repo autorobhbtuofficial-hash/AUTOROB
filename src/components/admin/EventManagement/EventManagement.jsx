@@ -234,8 +234,11 @@ const EventManagement = ({ userRole }) => {
                         <div className="form-group">
                             <label>Category *</label>
                             <select
-                                value={formData.category}
-                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                value={['Workshop', 'Competition', 'Seminar', 'Webinar', 'Hackathon'].includes(formData.category) ? formData.category : 'Others'}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setFormData({ ...formData, category: val === 'Others' ? '' : val });
+                                }}
                                 required
                             >
                                 <option value="Workshop">Workshop</option>
@@ -243,8 +246,20 @@ const EventManagement = ({ userRole }) => {
                                 <option value="Seminar">Seminar</option>
                                 <option value="Webinar">Webinar</option>
                                 <option value="Hackathon">Hackathon</option>
-                                <option value="Other">Other</option>
+                                <option value="Others">Others</option>
                             </select>
+
+                            {/* Show text input if 'Others' is selected or custom category exists */}
+                            {!['Workshop', 'Competition', 'Seminar', 'Webinar', 'Hackathon', ''].includes(formData.category) || (formData.category === '' && formData.category !== undefined) ? (
+                                <input
+                                    type="text"
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    placeholder="Specify Category"
+                                    style={{ marginTop: '0.5rem' }}
+                                    required
+                                />
+                            ) : null}
                         </div>
                     </div>
 
