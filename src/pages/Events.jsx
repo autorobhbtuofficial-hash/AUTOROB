@@ -136,7 +136,11 @@ const Events = () => {
                                         <div className="event-content">
                                             <div className="event-type">{event.category || 'Event'}</div>
                                             <h3 className="event-title">{event.title}</h3>
-                                            <p className="event-description">{event.description}</p>
+                                            <p className="event-description event-description-truncated">
+                                                {event.description && event.description.length > 150
+                                                    ? `${event.description.substring(0, 150)}...`
+                                                    : event.description}
+                                            </p>
                                             <div className="event-meta">
                                                 <div className="event-date">
                                                     <i className="far fa-calendar"></i>
@@ -165,11 +169,12 @@ const Events = () => {
                                                         Fee: ₹{event.registrationFee}
                                                     </div>
                                                 )}
-                                                {status === 'upcoming' && event.isRegistrationOpen && (
-                                                    <button className="btn btn-primary btn-sm">
-                                                        Register Now
-                                                    </button>
-                                                )}
+                                                <button
+                                                    className="btn btn-primary interactive"
+                                                    onClick={() => window.location.href = `/events/${event.id}`}
+                                                >
+                                                    See More <i className="fas fa-arrow-right"></i>
+                                                </button>
                                                 {status === 'closed' && (
                                                     <button className="btn btn-glass btn-sm" disabled>
                                                         Registration Closed

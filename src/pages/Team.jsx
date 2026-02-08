@@ -153,9 +153,9 @@ const Team = () => {
                                                         <i className="fab fa-linkedin"></i>
                                                     </a>
                                                 )}
-                                                {member.socialLinks?.github && (
-                                                    <a href={member.socialLinks.github} target="_blank" rel="noopener noreferrer" className="social-link interactive">
-                                                        <i className="fab fa-github"></i>
+                                                {member.socialLinks?.email && (
+                                                    <a href={`mailto:${member.socialLinks.email}`} className="social-link interactive">
+                                                        <i className="fas fa-envelope"></i>
                                                     </a>
                                                 )}
                                                 {member.socialLinks?.instagram && (

@@ -21,7 +21,7 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
         year: '',
         department: '',
         bio: '',
-        socialLinks: { linkedin: '', github: '', instagram: '' },
+        socialLinks: { linkedin: '', email: '', instagram: '' },
         isActive: true,
         isFeatured: false,
         order: 1
@@ -55,7 +55,7 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
             year: '',
             department: '',
             bio: '',
-            socialLinks: { linkedin: '', github: '', instagram: '' },
+            socialLinks: { linkedin: '', email: '', instagram: '' },
             isActive: true,
             isFeatured: false,
             order: members.length + 1
@@ -72,7 +72,7 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
             year: member.year || '',
             department: member.department || '',
             bio: member.bio || '',
-            socialLinks: member.socialLinks || { linkedin: '', github: '', instagram: '' },
+            socialLinks: member.socialLinks || { linkedin: '', email: '', instagram: '' },
             isActive: member.isActive !== undefined ? member.isActive : true,
             isFeatured: member.isFeatured || false,
             order: member.order || 1
@@ -133,7 +133,7 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
             bio: formData.bio || '',
             socialLinks: {
                 linkedin: formData.socialLinks.linkedin || '',
-                github: formData.socialLinks.github || '',
+                email: formData.socialLinks.email || '',
                 instagram: formData.socialLinks.instagram || ''
             },
             isActive: formData.isActive,
@@ -343,12 +343,12 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
                         </div>
 
                         <div className="form-group">
-                            <label>GitHub URL</label>
+                            <label>Email</label>
                             <input
-                                type="url"
-                                value={formData.socialLinks.github}
-                                onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, github: e.target.value } })}
-                                placeholder="https://github.com/username"
+                                type="email"
+                                value={formData.socialLinks.email}
+                                onChange={(e) => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, email: e.target.value } })}
+                                placeholder="member@example.com"
                             />
                         </div>
 

@@ -124,12 +124,54 @@
     margin-bottom: 1.5rem;
 }
 
+.event-description-truncated {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 4.8em;
+    /* 3 lines * 1.6 line-height */
+}
+
+.event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.event-date,
+.event-time,
+.event-venue {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.event-date i,
+.event-time i,
+.event-venue i {
+    color: var(--accent-primary);
+    width: 16px;
+}
+
+
 .event-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-top: 1rem;
     border-top: 1px solid var(--glass-border);
+    gap: 1rem;
+}
+
+.event-fee {
+    font-weight: 600;
+    color: var(--accent-secondary);
+    font-size: 1rem;
 }
 
 .event-date {
