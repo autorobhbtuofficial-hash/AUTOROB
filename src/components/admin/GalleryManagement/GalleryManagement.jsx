@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import DataTable from '../common/DataTable';
 import Modal from '../common/Modal';
 import {
@@ -9,7 +9,7 @@ import {
 } from '../../../services/adminService';
 import '../EventManagement/EventManagement.css';
 
-const GalleryManagement = ({ userRole }) => {
+const GalleryManagement = forwardRef(({ userRole }, ref) => {
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,6 +24,11 @@ const GalleryManagement = ({ userRole }) => {
     useEffect(() => {
         fetchImages();
     }, []);
+
+    // Expose triggerCreate method to parent via ref
+    useImperativeHandle(ref, () => ({
+        triggerCreate: handleUpload
+    }));
 
     const fetchImages = async () => {
         setLoading(true);
@@ -216,6 +221,6 @@ const GalleryManagement = ({ userRole }) => {
             </Modal>
         </div>
     );
-};
+});
 
 export default GalleryManagement;

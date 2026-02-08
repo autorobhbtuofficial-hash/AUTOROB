@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +16,12 @@ const AdminPanel = () => {
     const [loading, setLoading] = useState(true);
     const { currentUser, userRole, logout } = useAuth();
     const navigate = useNavigate();
+
+    // Refs for management components
+    const eventManagementRef = useRef(null);
+    const teamManagementRef = useRef(null);
+    const galleryManagementRef = useRef(null);
+    const newsManagementRef = useRef(null);
 
     useEffect(() => {
         // Check if user is admin or subadmin
@@ -57,22 +63,44 @@ const AdminPanel = () => {
 
     const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
 
+    // Quick Actions handlers
+    const handleQuickAction = (action) => {
+        switch (action) {
+            case 'createEvent':
+                setActiveSection('events');
+                setTimeout(() => eventManagementRef.current?.triggerCreate(), 100);
+                break;
+            case 'addTeamMember':
+                setActiveSection('team');
+                setTimeout(() => teamManagementRef.current?.triggerCreate(), 100);
+                break;
+            case 'uploadImages':
+                setActiveSection('gallery');
+                setTimeout(() => galleryManagementRef.current?.triggerCreate(), 100);
+                break;
+            case 'postNews':
+                setActiveSection('news');
+                setTimeout(() => newsManagementRef.current?.triggerCreate(), 100);
+                break;
+        }
+    };
+
     const renderContent = () => {
         switch (activeSection) {
             case 'overview':
-                return <OverviewSection analytics={analytics} loading={loading} />;
+                return <OverviewSection analytics={analytics} loading={loading} onQuickAction={handleQuickAction} />;
             case 'events':
-                return <EventManagement userRole={userRole} />;
+                return <EventManagement ref={eventManagementRef} userRole={userRole} />;
             case 'users':
                 return <UserManagement />;
             case 'team':
-                return <TeamManagement userRole={userRole} />;
+                return <TeamManagement ref={teamManagementRef} userRole={userRole} />;
             case 'gallery':
-                return <GalleryManagement userRole={userRole} />;
+                return <GalleryManagement ref={galleryManagementRef} userRole={userRole} />;
             case 'news':
-                return <NewsManagement userRole={userRole} />;
+                return <NewsManagement ref={newsManagementRef} userRole={userRole} />;
             default:
-                return <OverviewSection analytics={analytics} loading={loading} />;
+                return <OverviewSection analytics={analytics} loading={loading} onQuickAction={handleQuickAction} />;
         }
     };
 
@@ -132,7 +160,7 @@ const AdminPanel = () => {
 };
 
 // Overview Section Component
-const OverviewSection = ({ analytics, loading }) => {
+const OverviewSection = ({ analytics, loading, onQuickAction }) => {
     if (loading) {
         return (
             <div className="loading-state">
@@ -206,19 +234,19 @@ const OverviewSection = ({ analytics, loading }) => {
             <div className="quick-actions glass-card">
                 <h2>Quick Actions</h2>
                 <div className="action-grid">
-                    <button className="action-btn interactive">
+                    <button className="action-btn interactive" onClick={() => onQuickAction('createEvent')}>
                         <i className="fas fa-plus-circle"></i>
                         <span>Create Event</span>
                     </button>
-                    <button className="action-btn interactive">
+                    <button className="action-btn interactive" onClick={() => onQuickAction('addTeamMember')}>
                         <i className="fas fa-user-plus"></i>
                         <span>Add Team Member</span>
                     </button>
-                    <button className="action-btn interactive">
+                    <button className="action-btn interactive" onClick={() => onQuickAction('uploadImages')}>
                         <i className="fas fa-upload"></i>
                         <span>Upload Images</span>
                     </button>
-                    <button className="action-btn interactive">
+                    <button className="action-btn interactive" onClick={() => onQuickAction('postNews')}>
                         <i className="fas fa-newspaper"></i>
                         <span>Post News</span>
                     </button>

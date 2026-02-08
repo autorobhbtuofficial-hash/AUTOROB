@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import DataTable from '../common/DataTable';
 import Modal from '../common/Modal';
 import {
@@ -10,7 +10,7 @@ import {
 } from '../../../services/adminService';
 import '../EventManagement/EventManagement.css';
 
-const NewsManagement = ({ userRole }) => {
+const NewsManagement = forwardRef(({ userRole }, ref) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,6 +31,11 @@ const NewsManagement = ({ userRole }) => {
     useEffect(() => {
         fetchNews();
     }, []);
+
+    // Expose triggerCreate method to parent via ref
+    useImperativeHandle(ref, () => ({
+        triggerCreate: handleCreate
+    }));
 
     const fetchNews = async () => {
         setLoading(true);
@@ -308,6 +313,6 @@ const NewsManagement = ({ userRole }) => {
             </Modal>
         </div>
     );
-};
+});
 
 export default NewsManagement;

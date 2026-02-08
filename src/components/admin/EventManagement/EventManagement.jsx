@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import DataTable from '../common/DataTable';
 import Modal from '../common/Modal';
@@ -13,7 +13,7 @@ import {
 } from '../../../services/adminService';
 import './EventManagement.css';
 
-const EventManagement = ({ userRole }) => {
+const EventManagement = forwardRef(({ userRole }, ref) => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +36,11 @@ const EventManagement = ({ userRole }) => {
     useEffect(() => {
         fetchEvents();
     }, []);
+
+    // Expose triggerCreate method to parent via ref
+    useImperativeHandle(ref, () => ({
+        triggerCreate: handleCreate
+    }));
 
     const fetchEvents = async () => {
         setLoading(true);
@@ -385,6 +390,6 @@ const EventManagement = ({ userRole }) => {
             </Modal>
         </div>
     );
-};
+});
 
 export default EventManagement;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import DataTable from '../common/DataTable';
 import Modal from '../common/Modal';
 import {
@@ -10,7 +10,7 @@ import {
 } from '../../../services/adminService';
 import '../EventManagement/EventManagement.css';
 
-const TeamManagement = ({ userRole }) => {
+const TeamManagement = forwardRef(({ userRole }, ref) => {
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,6 +32,11 @@ const TeamManagement = ({ userRole }) => {
     useEffect(() => {
         fetchMembers();
     }, []);
+
+    // Expose triggerCreate method to parent via ref
+    useImperativeHandle(ref, () => ({
+        triggerCreate: handleCreate
+    }));
 
     const fetchMembers = async () => {
         setLoading(true);
@@ -415,6 +420,6 @@ const TeamManagement = ({ userRole }) => {
             </Modal>
         </div>
     );
-};
+});
 
 export default TeamManagement;
