@@ -32,11 +32,15 @@ const Events = () => {
 
     // Determine event status based on date and registration
     const getEventStatus = (event) => {
+        if (!event?.date) return 'upcoming';
         const eventDate = new Date(event.date);
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         if (eventDate < today) {
             return 'completed';
+        } else if (eventDate.toDateString() === today.toDateString()) {
+            return 'ongoing';
         } else if (event.isRegistrationOpen) {
             return 'upcoming';
         } else {
@@ -44,9 +48,33 @@ const Events = () => {
         }
     };
 
-    const filteredEvents = filter === 'all'
+    // Filter events by category
+    const categoryFilteredEvents = filter === 'all'
         ? events
         : events.filter(event => event.category?.toLowerCase() === filter.toLowerCase());
+
+    // Sort events by date proximity to current date (closest upcoming events first)
+    const filteredEvents = [...categoryFilteredEvents].sort((a, b) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+
+        // Calculate absolute difference from today
+        const diffA = Math.abs(dateA - today);
+        const diffB = Math.abs(dateB - today);
+
+        // Prioritize upcoming events over past events
+        const isUpcomingA = dateA >= today;
+        const isUpcomingB = dateB >= today;
+
+        if (isUpcomingA && !isUpcomingB) return -1; // A is upcoming, B is past
+        if (!isUpcomingA && isUpcomingB) return 1;  // B is upcoming, A is past
+
+        // Both upcoming or both past: sort by proximity to today
+        return diffA - diffB;
+    });
 
     return (
         <main className="events-page">
