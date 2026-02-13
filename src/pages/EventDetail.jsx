@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import Footer from '../components/common/Footer/Footer';
+import DynamicForm from '../components/common/DynamicForm/DynamicForm';
 import './EventDetail.css';
 
 const EventDetail = () => {
@@ -218,6 +219,32 @@ const EventDetail = () => {
                             )}
                         </motion.div>
                     </div>
+
+                    {/* Registration Form */}
+                    {event.registrationFormSchema?.enabled && (
+                        <div className="event-registration-section">
+                            <DynamicForm
+                                schema={event.registrationFormSchema}
+                                eventId={event.id}
+                                eventTitle={event.title}
+                                onSuccess={() => alert('Thank you for registering!')}
+                            />
+                        </div>
+                    )}
+
+                    {!event.registrationFormSchema?.enabled && event.isRegistrationOpen && (
+                        <div className="event-registration-section">
+                            <div className="contact-admin-card">
+                                <i className="fas fa-info-circle"></i>
+                                <h3>Registration Available</h3>
+                                <p>To register for this event, please contact the admin.</p>
+                                <Link to="/contact" className="btn btn-primary interactive">
+                                    <i className="fas fa-envelope"></i>
+                                    Contact Admin
+                                </Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </section>
 

@@ -8,6 +8,7 @@ import UserManagement from '../components/admin/UserManagement/UserManagement';
 import TeamManagement from '../components/admin/TeamManagement/TeamManagement';
 import GalleryManagement from '../components/admin/GalleryManagement/GalleryManagement';
 import NewsManagement from '../components/admin/NewsManagement/NewsManagement';
+import FormResponsesManagement from '../components/admin/FormResponsesManagement/FormResponsesManagement';
 import './AdminPanel.css';
 
 const AdminPanel = () => {
@@ -22,6 +23,7 @@ const AdminPanel = () => {
     const teamManagementRef = useRef(null);
     const galleryManagementRef = useRef(null);
     const newsManagementRef = useRef(null);
+    const formResponsesManagementRef = useRef(null);
 
     useEffect(() => {
         // Check if user is admin or subadmin
@@ -59,6 +61,7 @@ const AdminPanel = () => {
         { id: 'team', icon: 'fa-user-friends', label: 'Team', roles: ['admin', 'subadmin'] },
         { id: 'gallery', icon: 'fa-images', label: 'Gallery', roles: ['admin', 'subadmin'] },
         { id: 'news', icon: 'fa-newspaper', label: 'News', roles: ['admin', 'subadmin'] },
+        { id: 'responses', icon: 'fa-clipboard-list', label: 'Form Responses', roles: ['admin', 'subadmin'] },
     ];
 
     const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
@@ -99,6 +102,8 @@ const AdminPanel = () => {
                 return <GalleryManagement ref={galleryManagementRef} userRole={userRole} />;
             case 'news':
                 return <NewsManagement ref={newsManagementRef} userRole={userRole} />;
+            case 'responses':
+                return <FormResponsesManagement ref={formResponsesManagementRef} userRole={userRole} />;
             default:
                 return <OverviewSection analytics={analytics} loading={loading} onQuickAction={handleQuickAction} />;
         }

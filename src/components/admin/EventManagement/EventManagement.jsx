@@ -11,6 +11,7 @@ import {
     getEventRegistrations,
     exportToCSV
 } from '../../../services/adminService';
+import FormBuilder from '../FormBuilder/FormBuilder';
 import './EventManagement.css';
 
 const EventManagement = forwardRef(({ userRole }, ref) => {
@@ -28,7 +29,9 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
         registrationFee: 0,
         maxParticipants: 100,
         isRegistrationOpen: true,
-        isFeatured: false
+        isFeatured: false,
+        registrationFormSchema: { enabled: false, fields: [] },
+        webhookConfig: { enabled: false, url: '' }
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -63,7 +66,9 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             registrationFee: 0,
             maxParticipants: 100,
             isRegistrationOpen: true,
-            isFeatured: false
+            isFeatured: false,
+            registrationFormSchema: { enabled: false, fields: [] },
+            webhookConfig: { enabled: false, url: '' }
         });
         setImageFile(null);
         setIsModalOpen(true);
@@ -81,7 +86,9 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             registrationFee: event.registrationFee || 0,
             maxParticipants: event.maxParticipants || 100,
             isRegistrationOpen: event.isRegistrationOpen !== undefined ? event.isRegistrationOpen : true,
-            isFeatured: event.isFeatured || false
+            isFeatured: event.isFeatured || false,
+            registrationFormSchema: event.registrationFormSchema || { enabled: false, fields: [] },
+            webhookConfig: event.webhookConfig || { enabled: false, url: '' }
         });
         setImageFile(null);
         setIsModalOpen(true);
@@ -367,6 +374,54 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
                             </label>
                         </div>
                     </div>
+
+                    {/* Registration Form Builder */}
+                    <div className="form-section">
+                        <h3>Registration Form</h3>
+                        <FormBuilder
+                            schema={formData.registrationFormSchema}
+                            onChange={(schema) => setFormData({ ...formData, registrationFormSchema: schema })}
+                        />
+                    </div>
+
+                    {/* Webhook Integration */}
+                    {formData.registrationFormSchema?.enabled && (
+                        <div className="form-section">
+                            <h3>Google Sheets / Webhook Integration</h3>
+                            <div className="webhook-config">
+                                <label className="toggle-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.webhookConfig?.enabled || false}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            webhookConfig: { ...formData.webhookConfig, enabled: e.target.checked }
+                                        })}
+                                    />
+                                    <span>Enable Webhook Integration</span>
+                                </label>
+
+                                {formData.webhookConfig?.enabled && (
+                                    <div className="form-group" style={{ marginTop: '1rem' }}>
+                                        <label>Webhook URL *</label>
+                                        <input
+                                            type="url"
+                                            value={formData.webhookConfig?.url || ''}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                webhookConfig: { ...formData.webhookConfig, url: e.target.value }
+                                            })}
+                                            placeholder="https://hooks.zapier.com/hooks/catch/..."
+                                            required={formData.webhookConfig?.enabled}
+                                        />
+                                        <small style={{ display: 'block', marginTop: '0.5rem', color: 'var(--text-muted)' }}>
+                                            <i className="fas fa-info-circle"></i> Get this URL from Zapier, Make.com, or n8n. Form data will be sent here on submission.
+                                        </small>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="form-actions">
                         <button type="button" className="btn btn-glass interactive" onClick={() => setIsModalOpen(false)}>

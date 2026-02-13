@@ -238,6 +238,35 @@
 
 .error-container h2 {
     margin-bottom: 2rem;
+    color: var(--text-muted);
+}
+
+/* Registration Section */
+.event-registration-section {
+    margin-top: 3rem;
+}
+
+.contact-admin-card {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.contact-admin-card i {
+    font-size: 3rem;
+    color: var(--accent-primary);
+    margin-bottom: 1rem;
+}
+
+.contact-admin-card h3 {
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.contact-admin-card p {
+    margin-bottom: 1.5rem;
     color: var(--text-secondary);
 }
 
