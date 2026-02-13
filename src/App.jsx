@@ -17,6 +17,7 @@ import About from './pages/About';
 import Team from './pages/Team';
 import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
+import EventRegistration from './pages/EventRegistration';
 import Library from './pages/Library';
 import Gallery from './pages/Gallery';
 import News from './pages/News';
@@ -88,6 +89,7 @@ function App() {
                 <Route path="/team" element={<Team />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/:eventId" element={<EventDetail />} />
+                <Route path="/events/:eventId/register" element={<EventRegistration />} />
                 <Route path="/library" element={<Library />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/news" element={<News />} />
