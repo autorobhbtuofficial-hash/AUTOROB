@@ -4,6 +4,7 @@ import Modal from '../common/Modal';
 import {
     getAllGalleryImages,
     createGalleryImage,
+    updateGalleryImage,
     deleteGalleryImage,
     uploadToCloudinary
 } from '../../../services/adminService';
@@ -13,6 +14,7 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingImage, setEditingImage] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -40,7 +42,19 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const handleUpload = () => {
+        setEditingImage(null);
         setFormData({ title: '', description: '', category: 'Events' });
+        setImageFiles([]);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (image) => {
+        setEditingImage(image);
+        setFormData({
+            title: image.title || '',
+            description: image.description || '',
+            category: image.category || 'Events'
+        });
         setImageFiles([]);
         setIsModalOpen(true);
     };
@@ -67,30 +81,50 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (imageFiles.length === 0) {
-            alert('Please select at least one image');
-            return;
-        }
-
         setUploading(true);
 
-        for (const file of imageFiles) {
-            const uploadResult = await uploadToCloudinary(file);
-            if (uploadResult.success) {
-                await createGalleryImage({
-                    imageUrl: uploadResult.url,
-                    thumbnailUrl: uploadResult.url,
-                    title: formData.title || file.name,
-                    description: formData.description,
-                    category: formData.category
-                });
+        if (editingImage) {
+            // Update existing image metadata
+            const result = await updateGalleryImage(editingImage.id, {
+                title: formData.title,
+                description: formData.description,
+                category: formData.category
+            });
+
+            if (result.success) {
+                alert('Image updated successfully!');
+                setIsModalOpen(false);
+                fetchImages();
+            } else {
+                alert('Error: ' + result.error);
             }
+        } else {
+            // Create new images
+            if (imageFiles.length === 0) {
+                alert('Please select at least one image');
+                setUploading(false);
+                return;
+            }
+
+            for (const file of imageFiles) {
+                const uploadResult = await uploadToCloudinary(file);
+                if (uploadResult.success) {
+                    await createGalleryImage({
+                        imageUrl: uploadResult.url,
+                        thumbnailUrl: uploadResult.url,
+                        title: formData.title || file.name,
+                        description: formData.description,
+                        category: formData.category
+                    });
+                }
+            }
+
+            alert(`${imageFiles.length} image(s) uploaded successfully!`);
+            setIsModalOpen(false);
+            fetchImages();
         }
 
         setUploading(false);
-        alert(`${imageFiles.length} image(s) uploaded successfully!`);
-        setIsModalOpen(false);
-        fetchImages();
     };
 
     const columns = [
@@ -136,41 +170,52 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
             <DataTable
                 columns={columns}
                 data={images}
+                onEdit={handleEdit}
                 onDelete={userRole === 'admin' ? handleDelete : null}
-                actions={userRole === 'admin' ? ['delete'] : []}
+                actions={userRole === 'admin' ? ['edit', 'delete'] : ['edit']}
             />
 
             {/* Upload Modal */}
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title="Upload Images"
+                title={editingImage ? "Edit Image" : "Upload Images"}
                 size="medium"
             >
                 <form onSubmit={handleSubmit} className="event-form">
-                    <div className="form-group">
-                        <label>Images * (Multiple)</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={(e) => setImageFiles(Array.from(e.target.files))}
-                            required
-                        />
-                        {imageFiles.length > 0 && (
-                            <p style={{ marginTop: '0.5rem', color: 'var(--text-muted)' }}>
-                                {imageFiles.length} file(s) selected
-                            </p>
-                        )}
-                    </div>
+                    {!editingImage && (
+                        <div className="form-group">
+                            <label>Images * (Multiple)</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => setImageFiles(Array.from(e.target.files))}
+                                required
+                            />
+                            {imageFiles.length > 0 && (
+                                <p style={{ marginTop: '0.5rem', color: 'var(--text-muted)' }}>
+                                    {imageFiles.length} file(s) selected
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {editingImage && (
+                        <div className="form-group">
+                            <label>Current Image</label>
+                            <img src={editingImage.imageUrl} alt={editingImage.title} style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }} />
+                        </div>
+                    )}
 
                     <div className="form-group">
-                        <label>Title (Optional)</label>
+                        <label>Title {editingImage ? '*' : '(Optional)'}</label>
                         <input
                             type="text"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            placeholder="Leave empty to use filename"
+                            placeholder={editingImage ? "Enter image title" : "Leave empty to use filename"}
+                            required={editingImage}
                         />
                     </div>
 
@@ -207,12 +252,12 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
                             {uploading ? (
                                 <>
                                     <i className="fas fa-spinner fa-spin"></i>
-                                    Uploading...
+                                    {editingImage ? 'Updating...' : 'Uploading...'}
                                 </>
                             ) : (
                                 <>
-                                    <i className="fas fa-upload"></i>
-                                    Upload Images
+                                    <i className={`fas fa-${editingImage ? 'save' : 'upload'}`}></i>
+                                    {editingImage ? 'Update Image' : 'Upload Images'}
                                 </>
                             )}
                         </button>

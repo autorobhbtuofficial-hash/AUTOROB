@@ -241,7 +241,7 @@ const Home = () => {
                                 viewport={{ once: true }}
                                 transition={{ delay: i * 0.05 }}
                             >
-                                <img src={img.url} alt={img.title || 'Gallery Image'} />
+                                <img src={img.imageUrl} alt={img.title || 'Gallery Image'} />
                             </motion.div>
                         ))}
                     </div>

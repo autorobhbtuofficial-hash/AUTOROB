@@ -187,6 +187,17 @@ export const getAllGalleryImages = async () => {
     }
 };
 
+export const updateGalleryImage = async (imageId, imageData) => {
+    try {
+        const imageRef = doc(db, 'gallery_images', imageId);
+        await updateDoc(imageRef, imageData);
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating gallery image:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 export const deleteGalleryImage = async (imageId) => {
     try {
         await deleteDoc(doc(db, 'gallery_images', imageId));
