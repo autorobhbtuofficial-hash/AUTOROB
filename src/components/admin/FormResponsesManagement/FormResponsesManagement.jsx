@@ -148,7 +148,10 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
         {
             key: 'responseCount',
             label: 'Fields',
-            render: (response) => Object.keys(response.responses || {}).length
+            render: (response) => {
+                if (!response || !response.responses) return 0;
+                return Object.keys(response.responses).length;
+            }
         }
     ];
 
