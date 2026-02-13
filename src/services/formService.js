@@ -52,9 +52,8 @@ const sendToWebhook = async (webhookUrl, data) => {
  */
 export const submitEventRegistration = async (eventId, eventTitle, formResponses, userId = null, webhookUrl = null) => {
     try {
-        const docRef = await addDoc(collection(db, 'form_responses'), {
-            eventId,
-            eventTitle,
+        // Store responses nested under event: form_responses/{eventId}/registrations/{responseId}
+        const docRef = await addDoc(collection(db, 'form_responses', eventId, 'registrations'), {
             userId,
             responses: formResponses,
             status: 'pending',
@@ -88,19 +87,24 @@ export const submitEventRegistration = async (eventId, eventTitle, formResponses
 /**
  * Get all form responses for a specific event
  * @param {string} eventId - Event ID
+ * @param {string} eventTitle - Event title (for denormalization)
  * @returns {Promise<{success: boolean, data?: array, error?: string}>}
  */
-export const getEventFormResponses = async (eventId) => {
+export const getEventFormResponses = async (eventId, eventTitle = '') => {
     try {
         const q = query(
-            collection(db, 'form_responses'),
-            where('eventId', '==', eventId),
+            collection(db, 'form_responses', eventId, 'registrations'),
             orderBy('submittedAt', 'desc')
         );
         const querySnapshot = await getDocs(q);
         const responses = [];
         querySnapshot.forEach((doc) => {
-            responses.push({ id: doc.id, ...doc.data() });
+            responses.push({
+                id: doc.id,
+                eventId,
+                eventTitle,
+                ...doc.data()
+            });
         });
         return { success: true, data: responses };
     } catch (error) {
@@ -111,17 +115,29 @@ export const getEventFormResponses = async (eventId) => {
 
 /**
  * Get all form responses across all events
+ * @param {array} events - Array of event objects with id and title
  * @returns {Promise<{success: boolean, data?: array, error?: string}>}
  */
-export const getAllFormResponses = async () => {
+export const getAllFormResponses = async (events = []) => {
     try {
-        const q = query(collection(db, 'form_responses'), orderBy('submittedAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const responses = [];
-        querySnapshot.forEach((doc) => {
-            responses.push({ id: doc.id, ...doc.data() });
+        const allResponses = [];
+
+        // Fetch responses from each event's subcollection
+        for (const event of events) {
+            const result = await getEventFormResponses(event.id, event.title);
+            if (result.success && result.data) {
+                allResponses.push(...result.data);
+            }
+        }
+
+        // Sort by submittedAt descending
+        allResponses.sort((a, b) => {
+            const timeA = a.submittedAt?.seconds || 0;
+            const timeB = b.submittedAt?.seconds || 0;
+            return timeB - timeA;
         });
-        return { success: true, data: responses };
+
+        return { success: true, data: allResponses };
     } catch (error) {
         console.error('Error getting all form responses:', error);
         return { success: false, error: error.message };
@@ -130,13 +146,14 @@ export const getAllFormResponses = async () => {
 
 /**
  * Update form response (admin only)
+ * @param {string} eventId - Event ID
  * @param {string} responseId - Response ID
  * @param {object} data - Data to update
  * @returns {Promise<{success: boolean, error?: string}>}
  */
-export const updateFormResponse = async (responseId, data) => {
+export const updateFormResponse = async (eventId, responseId, data) => {
     try {
-        const responseRef = doc(db, 'form_responses', responseId);
+        const responseRef = doc(db, 'form_responses', eventId, 'registrations', responseId);
         await updateDoc(responseRef, data);
         return { success: true };
     } catch (error) {
@@ -147,12 +164,13 @@ export const updateFormResponse = async (responseId, data) => {
 
 /**
  * Delete form response (admin only)
+ * @param {string} eventId - Event ID
  * @param {string} responseId - Response ID
  * @returns {Promise<{success: boolean, error?: string}>}
  */
-export const deleteFormResponse = async (responseId) => {
+export const deleteFormResponse = async (eventId, responseId) => {
     try {
-        await deleteDoc(doc(db, 'form_responses', responseId));
+        await deleteDoc(doc(db, 'form_responses', eventId, 'registrations', responseId));
         return { success: true };
     } catch (error) {
         console.error('Error deleting form response:', error);

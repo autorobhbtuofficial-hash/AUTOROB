@@ -30,12 +30,17 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
     const fetchResponses = async () => {
         try {
             setLoading(true);
-            const result = filterEventId === 'all'
-                ? await getAllFormResponses()
-                : await getEventFormResponses(filterEventId);
-
-            if (result.success) {
-                setResponses(result.data);
+            if (filterEventId === 'all') {
+                const result = await getAllFormResponses(events);
+                if (result.success) {
+                    setResponses(result.data);
+                }
+            } else {
+                const event = events.find(e => e.id === filterEventId);
+                const result = await getEventFormResponses(filterEventId, event?.title || '');
+                if (result.success) {
+                    setResponses(result.data);
+                }
             }
         } catch (error) {
             console.error('Error fetching responses:', error);
@@ -60,10 +65,10 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = async (responseId) => {
+    const handleDelete = async (response) => {
         if (!window.confirm('Are you sure you want to delete this response?')) return;
 
-        const result = await deleteFormResponse(responseId);
+        const result = await deleteFormResponse(response.eventId, response.id);
         if (result.success) {
             alert('Response deleted successfully');
             fetchResponses();
@@ -73,7 +78,7 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const handleStatusChange = async (responseId, newStatus) => {
-        const result = await updateFormResponse(responseId, { status: newStatus });
+        const result = await updateFormResponse(selectedResponse.eventId, responseId, { status: newStatus });
         if (result.success) {
             alert('Status updated successfully');
             fetchResponses();
@@ -165,7 +170,7 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
         {
             label: 'Delete',
             icon: 'fa-trash',
-            onClick: (response) => handleDelete(response.id),
+            onClick: handleDelete,
             className: 'btn-danger',
             requireConfirm: true
         }

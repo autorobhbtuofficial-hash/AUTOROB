@@ -57,14 +57,18 @@ const EventRegistration = () => {
             // Check if user already registered
             if (currentUser) {
                 const q = query(
-                    collection(db, 'form_responses'),
-                    where('eventId', '==', eventId),
+                    collection(db, 'form_responses', eventId, 'registrations'),
                     where('userId', '==', currentUser.uid)
                 );
                 const querySnapshot = await getDocs(q);
 
                 if (!querySnapshot.empty) {
-                    setExistingResponse({ id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() });
+                    setExistingResponse({
+                        id: querySnapshot.docs[0].id,
+                        eventId,
+                        eventTitle: eventData.title,
+                        ...querySnapshot.docs[0].data()
+                    });
                 }
             }
         } catch (err) {

@@ -59,7 +59,8 @@ service cloud.firestore {
     }
     
     // Form Responses - users can create and view their own, admins can manage all
-    match /form_responses/{responseId} {
+    // Nested structure: form_responses/{eventId}/registrations/{responseId}
+    match /form_responses/{eventId}/registrations/{responseId} {
       allow read: if request.auth != null && 
         (resource.data.userId == request.auth.uid || 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin']);
