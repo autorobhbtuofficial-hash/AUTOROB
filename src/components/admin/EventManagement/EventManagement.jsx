@@ -30,6 +30,7 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
         maxParticipants: 100,
         isRegistrationOpen: true,
         isFeatured: false,
+        allowResponseEdits: false,
         registrationFormSchema: { enabled: false, fields: [] },
         webhookConfig: { enabled: false, url: '' }
     });
@@ -67,6 +68,7 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             maxParticipants: 100,
             isRegistrationOpen: true,
             isFeatured: false,
+            allowResponseEdits: false,
             registrationFormSchema: { enabled: false, fields: [] },
             webhookConfig: { enabled: false, url: '' }
         });
@@ -87,6 +89,7 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             maxParticipants: event.maxParticipants || 100,
             isRegistrationOpen: event.isRegistrationOpen !== undefined ? event.isRegistrationOpen : true,
             isFeatured: event.isFeatured || false,
+            allowResponseEdits: event.allowResponseEdits || false,
             registrationFormSchema: event.registrationFormSchema || { enabled: false, fields: [] },
             webhookConfig: event.webhookConfig || { enabled: false, url: '' }
         });
@@ -371,6 +374,17 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
                                     onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
                                 />
                                 <span>Featured Event</span>
+                            </label>
+                        </div>
+
+                        <div className="form-group checkbox-group">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={formData.allowResponseEdits}
+                                    onChange={(e) => setFormData({ ...formData, allowResponseEdits: e.target.checked })}
+                                />
+                                <span>Allow Response Edits</span>
                             </label>
                         </div>
                     </div>

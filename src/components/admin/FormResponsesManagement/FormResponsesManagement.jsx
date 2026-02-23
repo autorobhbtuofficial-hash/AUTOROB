@@ -1,234 +1,346 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import DataTable from '../common/DataTable';
 import Modal from '../common/Modal';
 import {
-    getAllFormResponses,
     getEventFormResponses,
     updateFormResponse,
     deleteFormResponse
 } from '../../../services/formService';
 import { getAllEvents } from '../../../services/adminService';
 import '../EventManagement/EventManagement.css';
+import './FormResponsesManagement.css';
 
 const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
-    const [responses, setResponses] = useState([]);
+    // Navigation state: 'events' | 'responses' | 'detail'
+    const [view, setView] = useState('events');
+
+    // Data
     const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [responses, setResponses] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
     const [selectedResponse, setSelectedResponse] = useState(null);
+
+    // UI
+    const [loadingEvents, setLoadingEvents] = useState(true);
+    const [loadingResponses, setLoadingResponses] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [filterEventId, setFilterEventId] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useImperativeHandle(ref, () => ({
-        refresh: fetchResponses
+        refresh: () => {
+            setView('events');
+            fetchEvents();
+        }
     }));
 
     useEffect(() => {
-        fetchResponses();
         fetchEvents();
-    }, [filterEventId]);
+    }, []);
 
-    const fetchResponses = async () => {
-        try {
-            setLoading(true);
-            if (filterEventId === 'all') {
-                const result = await getAllFormResponses(events);
-                if (result.success) {
-                    setResponses(result.data);
-                }
-            } else {
-                const event = events.find(e => e.id === filterEventId);
-                const result = await getEventFormResponses(filterEventId, event?.title || '');
-                if (result.success) {
-                    setResponses(result.data);
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching responses:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ── Data fetching ──────────────────────────────────────────────
 
     const fetchEvents = async () => {
         try {
+            setLoadingEvents(true);
             const result = await getAllEvents();
             if (result.success) {
-                setEvents(result.data);
+                // Only show events that have forms enabled (saved as registrationFormSchema.enabled by FormBuilder)
+                const formEvents = result.data.filter(
+                    e => e.registrationFormSchema?.enabled === true
+                );
+                setEvents(formEvents);
             }
-        } catch (error) {
-            console.error('Error fetching events:', error);
+        } catch (err) {
+            console.error('Error fetching events:', err);
+        } finally {
+            setLoadingEvents(false);
         }
     };
 
-    const handleView = (response) => {
+    const fetchResponses = async (event) => {
+        try {
+            setLoadingResponses(true);
+            const result = await getEventFormResponses(event.id, event.title);
+            if (result.success) {
+                setResponses(result.data);
+            }
+        } catch (err) {
+            console.error('Error fetching responses:', err);
+        } finally {
+            setLoadingResponses(false);
+        }
+    };
+
+    // ── Navigation ─────────────────────────────────────────────────
+
+    const handleSelectEvent = (event) => {
+        setSelectedEvent(event);
+        setSearchQuery('');
+        fetchResponses(event);
+        setView('responses');
+    };
+
+    const handleSelectResponse = (response) => {
         setSelectedResponse(response);
         setIsModalOpen(true);
     };
 
+    const handleBackToEvents = () => {
+        setView('events');
+        setSelectedEvent(null);
+        setResponses([]);
+        setSearchQuery('');
+    };
+
+    // ── Actions ────────────────────────────────────────────────────
+
     const handleDelete = async (response) => {
         if (!window.confirm('Are you sure you want to delete this response?')) return;
-
         const result = await deleteFormResponse(response.eventId, response.id);
         if (result.success) {
-            alert('Response deleted successfully');
-            fetchResponses();
+            setResponses(prev => prev.filter(r => r.id !== response.id));
+            if (isModalOpen) setIsModalOpen(false);
         } else {
             alert('Error deleting response: ' + result.error);
         }
     };
 
-    const handleStatusChange = async (responseId, newStatus) => {
-        const result = await updateFormResponse(selectedResponse.eventId, responseId, { status: newStatus });
+    const handleStatusChange = async (newStatus) => {
+        if (!selectedResponse) return;
+        const result = await updateFormResponse(selectedResponse.eventId, selectedResponse.id, { status: newStatus });
         if (result.success) {
-            alert('Status updated successfully');
-            fetchResponses();
-            setIsModalOpen(false);
+            // Update in responses list too
+            setResponses(prev =>
+                prev.map(r => r.id === selectedResponse.id ? { ...r, status: newStatus } : r)
+            );
+            setSelectedResponse(prev => ({ ...prev, status: newStatus }));
         } else {
             alert('Error updating status: ' + result.error);
         }
     };
 
     const exportToCSV = () => {
-        if (responses.length === 0) {
-            alert('No data to export');
-            return;
-        }
+        if (responses.length === 0) { alert('No data to export'); return; }
 
-        // Get all unique field labels
         const fieldLabels = new Set();
-        responses.forEach(response => {
-            Object.values(response.responses || {}).forEach(field => {
-                fieldLabels.add(field.label);
-            });
-        });
+        responses.forEach(r => Object.values(r.responses || {}).forEach(f => fieldLabels.add(f.label)));
 
-        // Create CSV header
-        const headers = ['Submitted At', 'Event', 'Status', ...Array.from(fieldLabels)];
+        const headers = ['Submitted At', 'Status', ...Array.from(fieldLabels)];
         const csvRows = [headers.join(',')];
 
-        // Create CSV rows
-        responses.forEach(response => {
+        responses.forEach(r => {
             const row = [
-                new Date(response.submittedAt?.seconds * 1000).toLocaleString(),
-                response.eventTitle,
-                response.status,
+                r.submittedAt?.seconds
+                    ? new Date(r.submittedAt.seconds * 1000).toLocaleString()
+                    : 'Unknown',
+                r.status,
                 ...Array.from(fieldLabels).map(label => {
-                    const field = Object.values(response.responses || {}).find(f => f.label === label);
+                    const field = Object.values(r.responses || {}).find(f => f.label === label);
                     if (!field) return '';
                     if (Array.isArray(field.value)) return `"${field.value.join(', ')}"`;
-                    if (field.type === 'file') return field.value; // URL
-                    return `"${field.value}"`;
+                    if (field.type === 'file') return field.value;
+                    return `"${String(field.value || '').replace(/"/g, '""')}"`;
                 })
             ];
             csvRows.push(row.join(','));
         });
 
-        // Download CSV
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `form-responses-${filterEventId === 'all' ? 'all' : events.find(e => e.id === filterEventId)?.title || 'event'}-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `responses-${selectedEvent?.title || 'event'}-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
     };
 
-    const columns = [
-        {
-            key: 'submittedAt',
-            label: 'Submitted',
-            render: (response) => new Date(response.submittedAt?.seconds * 1000).toLocaleString()
-        },
-        { key: 'eventTitle', label: 'Event' },
-        {
-            key: 'status',
-            label: 'Status',
-            render: (response) => (
-                <span className={`status-badge status-${response.status}`}>
-                    {response.status}
-                </span>
-            )
-        },
-        {
-            key: 'responseCount',
-            label: 'Fields',
-            render: (response) => {
-                if (!response || !response.responses) return 0;
-                return Object.keys(response.responses).length;
-            }
-        }
-    ];
+    // ── Helpers ────────────────────────────────────────────────────
 
-    const actions = [
-        {
-            label: 'View',
-            icon: 'fa-eye',
-            onClick: handleView,
-            className: 'btn-glass'
-        },
-        {
-            label: 'Delete',
-            icon: 'fa-trash',
-            onClick: handleDelete,
-            className: 'btn-danger',
-            requireConfirm: true
-        }
-    ];
+    const getDisplayName = (response) => {
+        const fields = Object.values(response.responses || {});
+        const emailField = fields.find(f =>
+            f.label?.toLowerCase().includes('email') || f.type === 'email'
+        );
+        const nameField = fields.find(f =>
+            f.label?.toLowerCase().includes('name') && !f.label?.toLowerCase().includes('email')
+        );
+        const email = emailField?.value || '';
+        const name = nameField?.value || '';
+        return { name, email };
+    };
+
+    const formatDate = (submittedAt) => {
+        if (!submittedAt?.seconds) return 'Unknown';
+        return new Date(submittedAt.seconds * 1000).toLocaleString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    };
+
+    const filteredResponses = responses.filter(r => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        const { name, email } = getDisplayName(r);
+        return name.toLowerCase().includes(q) || email.toLowerCase().includes(q);
+    });
+
+    // ── Render ─────────────────────────────────────────────────────
 
     return (
-        <div className="event-management">
-            <div className="management-header">
-                <div className="header-left">
-                    <h2>Form Responses</h2>
-                    <p>{responses.length} total responses</p>
-                </div>
-                <div className="header-right">
-                    <select
-                        value={filterEventId}
-                        onChange={(e) => setFilterEventId(e.target.value)}
-                        className="event-filter"
-                    >
-                        <option value="all">All Events</option>
-                        {events.map(event => (
-                            <option key={event.id} value={event.id}>
-                                {event.title}
-                            </option>
-                        ))}
-                    </select>
-                    <button
-                        className="btn btn-glass interactive"
-                        onClick={exportToCSV}
-                        disabled={responses.length === 0}
-                    >
-                        <i className="fas fa-download"></i>
-                        Export CSV
-                    </button>
-                </div>
+        <div className="frm-container">
+
+            {/* ── Breadcrumb ── */}
+            <div className="frm-breadcrumb">
+                <button className={`frm-crumb ${view === 'events' ? 'active' : ''}`} onClick={handleBackToEvents}>
+                    <i className="fas fa-clipboard-list" /> Form Responses
+                </button>
+                {selectedEvent && (
+                    <>
+                        <i className="fas fa-chevron-right frm-crumb-sep" />
+                        <span className="frm-crumb active">{selectedEvent.title}</span>
+                    </>
+                )}
             </div>
 
-            <DataTable
-                columns={columns}
-                data={responses}
-                actions={actions}
-                loading={loading}
-                emptyMessage="No form responses yet"
-            />
+            {/* ══ LEVEL 1 : Event Cards ══ */}
+            {view === 'events' && (
+                <div className="frm-level">
+                    <div className="frm-level-header">
+                        <div>
+                            <h2>Form Responses</h2>
+                            <p className="frm-subtitle">
+                                {loadingEvents ? 'Loading…' : `${events.length} event${events.length !== 1 ? 's' : ''} with forms enabled`}
+                            </p>
+                        </div>
+                    </div>
 
-            {/* Response Detail Modal */}
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Response Details">
+                    {loadingEvents ? (
+                        <div className="frm-loading">
+                            <i className="fas fa-spinner fa-spin" />
+                            <span>Loading events…</span>
+                        </div>
+                    ) : events.length === 0 ? (
+                        <div className="frm-empty">
+                            <i className="fas fa-clipboard" />
+                            <h3>No events with forms</h3>
+                            <p>Enable forms on events in the Event Management section.</p>
+                        </div>
+                    ) : (
+                        <div className="frm-event-grid">
+                            {events.map(event => (
+                                <button
+                                    key={event.id}
+                                    className="frm-event-card interactive"
+                                    onClick={() => handleSelectEvent(event)}
+                                >
+                                    <div className="frm-event-card-icon">
+                                        <i className="fas fa-calendar-alt" />
+                                    </div>
+                                    <div className="frm-event-card-body">
+                                        <h3>{event.title}</h3>
+                                        <p className="frm-event-meta">
+                                            {event.date || 'Date TBD'}
+                                            {event.venue ? ` · ${event.venue}` : ''}
+                                        </p>
+                                        <span className="frm-event-form-badge">
+                                            <i className="fas fa-wpforms" /> Form Active
+                                        </span>
+                                    </div>
+                                    <div className="frm-event-card-arrow">
+                                        <i className="fas fa-chevron-right" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ══ LEVEL 2 : Responses List ══ */}
+            {view === 'responses' && (
+                <div className="frm-level">
+                    <div className="frm-level-header">
+                        <div>
+                            <h2>{selectedEvent?.title}</h2>
+                            <p className="frm-subtitle">
+                                {loadingResponses ? 'Loading…' : `${responses.length} submission${responses.length !== 1 ? 's' : ''}`}
+                            </p>
+                        </div>
+                        <div className="frm-level-actions">
+                            <div className="frm-search-wrap">
+                                <i className="fas fa-search" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name or email…"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="frm-search"
+                                />
+                            </div>
+                            <button
+                                className="btn btn-glass interactive"
+                                onClick={exportToCSV}
+                                disabled={responses.length === 0}
+                            >
+                                <i className="fas fa-download" /> Export CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    {loadingResponses ? (
+                        <div className="frm-loading">
+                            <i className="fas fa-spinner fa-spin" />
+                            <span>Loading responses…</span>
+                        </div>
+                    ) : filteredResponses.length === 0 ? (
+                        <div className="frm-empty">
+                            <i className="fas fa-inbox" />
+                            <h3>{responses.length === 0 ? 'No responses yet' : 'No results'}</h3>
+                            <p>{responses.length === 0 ? 'No one has submitted this form yet.' : 'Try a different search.'}</p>
+                        </div>
+                    ) : (
+                        <div className="frm-response-list">
+                            {filteredResponses.map((resp, idx) => {
+                                const { name, email } = getDisplayName(resp);
+                                return (
+                                    <button
+                                        key={resp.id}
+                                        className="frm-response-row interactive"
+                                        onClick={() => handleSelectResponse(resp)}
+                                    >
+                                        <div className="frm-resp-avatar">
+                                            {(name || email || '?')[0].toUpperCase()}
+                                        </div>
+                                        <div className="frm-resp-info">
+                                            <span className="frm-resp-name">{name || email || `Response #${idx + 1}`}</span>
+                                            {name && email && <span className="frm-resp-email">{email}</span>}
+                                            <span className="frm-resp-date">{formatDate(resp.submittedAt)}</span>
+                                        </div>
+                                        <div className="frm-resp-right">
+                                            <span className={`status-badge status-${resp.status}`}>{resp.status || 'pending'}</span>
+                                            <i className="fas fa-chevron-right frm-resp-arrow" />
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ══ LEVEL 3 : Full Detail Modal ══ */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Form Response Detail">
                 {selectedResponse && (
                     <div className="response-detail">
                         <div className="response-header">
                             <div className="response-info">
-                                <h3>{selectedResponse.eventTitle}</h3>
-                                <p>Submitted: {new Date(selectedResponse.submittedAt?.seconds * 1000).toLocaleString()}</p>
+                                <h3>{selectedEvent?.title}</h3>
+                                <p>Submitted: {formatDate(selectedResponse.submittedAt)}</p>
                             </div>
                             <div className="status-selector">
                                 <label>Status:</label>
                                 <select
-                                    value={selectedResponse.status}
-                                    onChange={(e) => handleStatusChange(selectedResponse.id, e.target.value)}
+                                    value={selectedResponse.status || 'pending'}
+                                    onChange={e => handleStatusChange(e.target.value)}
                                     className="status-select"
                                 >
                                     <option value="pending">Pending</option>
@@ -245,13 +357,10 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
                                     <div className="field-value">
                                         {field.type === 'file' ? (
                                             <a href={field.value} target="_blank" rel="noopener noreferrer" className="file-link">
-                                                <i className="fas fa-file"></i>
-                                                {field.fileName || 'View File'}
+                                                <i className="fas fa-file" /> {field.fileName || 'View File'}
                                             </a>
                                         ) : Array.isArray(field.value) ? (
-                                            <ul>
-                                                {field.value.map((v, i) => <li key={i}>{v}</li>)}
-                                            </ul>
+                                            <ul>{field.value.map((v, i) => <li key={i}>{v}</li>)}</ul>
                                         ) : (
                                             <p>{field.value}</p>
                                         )}
@@ -261,16 +370,14 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
                         </div>
 
                         <div className="modal-actions">
-                            <button
-                                className="btn btn-danger interactive"
-                                onClick={() => {
-                                    handleDelete(selectedResponse.id);
-                                    setIsModalOpen(false);
-                                }}
-                            >
-                                <i className="fas fa-trash"></i>
-                                Delete Response
-                            </button>
+                            {userRole === 'admin' && (
+                                <button
+                                    className="btn btn-danger interactive"
+                                    onClick={() => handleDelete(selectedResponse)}
+                                >
+                                    <i className="fas fa-trash" /> Delete Response
+                                </button>
+                            )}
                             <button className="btn btn-glass interactive" onClick={() => setIsModalOpen(false)}>
                                 Close
                             </button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './FormBuilder.css';
 
@@ -18,6 +18,21 @@ const FormBuilder = ({ schema, onChange }) => {
     const [enabled, setEnabled] = useState(schema?.enabled || false);
     const [editingField, setEditingField] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
+
+    // Only sync with schema when it's a completely new schema (different event being edited)
+    // This prevents losing work when the parent re-renders
+    useEffect(() => {
+        // Only update if schema has different number of fields or enabled state changed
+        // This prevents unnecessary resets during editing
+        if (schema && (
+            (schema.fields?.length !== fields.length && fields.length === 0) ||
+            (schema.enabled !== enabled && fields.length === 0)
+        )) {
+            setFields(schema.fields || []);
+            setEnabled(schema.enabled || false);
+        }
+    }, [schema]);
+
 
     const generateFieldId = () => `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 

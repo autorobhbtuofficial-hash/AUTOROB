@@ -183,39 +183,192 @@ const ProfileTab = ({ currentUser, userRole }) => {
 
 // Events Tab Component
 const EventsTab = () => {
-    const registeredEvents = [
-        { title: 'RoboWars 2024', date: '2024-03-15', status: 'Upcoming', category: 'Competition' },
-        { title: 'AI Workshop', date: '2024-02-20', status: 'Upcoming', category: 'Workshop' },
-        { title: 'Line Following Robot', date: '2024-01-10', status: 'Completed', category: 'Competition' }
-    ];
+    const { currentUser } = useAuth();
+    const [registeredEvents, setRegisteredEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedResponse, setSelectedResponse] = useState(null);
+    const [showResponseModal, setShowResponseModal] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchUserRegistrations();
+    }, [currentUser]);
+
+    const fetchUserRegistrations = async () => {
+        if (!currentUser) return;
+
+        setLoading(true);
+        try {
+            // Import the function dynamically
+            const { getUserEventRegistrations } = await import('../services/formService');
+            const result = await getUserEventRegistrations(currentUser.uid);
+
+            if (result.success) {
+                setRegisteredEvents(result.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching registrations:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleViewResponse = (event) => {
+        setSelectedResponse(event);
+        setShowResponseModal(true);
+    };
+
+    const getEventStatus = (eventDate) => {
+        const today = new Date();
+        const eventDateObj = new Date(eventDate);
+        return eventDateObj >= today ? 'Upcoming' : 'Completed';
+    };
+
+    if (loading) {
+        return (
+            <div className="events-tab">
+                <h1 className="tab-title gradient-text">My Events</h1>
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <i className="fas fa-spinner fa-spin" style={{ fontSize: '2rem' }}></i>
+                    <p>Loading your registrations...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="events-tab">
-            <h1 className="tab-title gradient-text">My Events</h1>
+        <>
+            <div className="events-tab">
+                <h1 className="tab-title gradient-text">My Events</h1>
 
-            <div className="events-list">
-                {registeredEvents.map((event, index) => (
-                    <motion.div
-                        key={index}
-                        className="event-card glass-card"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                    >
-                        <div className="event-header">
-                            <h3>{event.title}</h3>
-                            <span className={`event-badge ${event.status.toLowerCase()}`}>
-                                {event.status}
-                            </span>
-                        </div>
-                        <div className="event-details">
-                            <span><i className="far fa-calendar"></i> {new Date(event.date).toLocaleDateString()}</span>
-                            <span><i className="fas fa-tag"></i> {event.category}</span>
-                        </div>
-                    </motion.div>
-                ))}
+                {registeredEvents.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                        <i className="fas fa-calendar-times" style={{ fontSize: '3rem', opacity: 0.3 }}></i>
+                        <p style={{ marginTop: '1rem', opacity: 0.7 }}>You haven't registered for any events yet.</p>
+                        <button
+                            className="btn btn-primary interactive"
+                            style={{ marginTop: '1rem' }}
+                            onClick={() => navigate('/events')}
+                        >
+                            <i className="fas fa-search"></i> Browse Events
+                        </button>
+                    </div>
+                ) : (
+                    <div className="events-list">
+                        {registeredEvents.map((event, index) => (
+                            <motion.div
+                                key={index}
+                                className="event-card glass-card"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.1 }}
+                            >
+                                <div className="event-header">
+                                    <h3>{event.eventTitle}</h3>
+                                    <span className={`event-badge ${getEventStatus(event.eventDate).toLowerCase()}`}>
+                                        {getEventStatus(event.eventDate)}
+                                    </span>
+                                </div>
+                                <div className="event-details">
+                                    <span><i className="far fa-calendar"></i> {event.eventDate}</span>
+                                    <span><i className="fas fa-clock"></i> {event.eventTime}</span>
+                                    <span><i className="fas fa-map-marker-alt"></i> {event.eventVenue}</span>
+                                    <span><i className="fas fa-tag"></i> {event.eventCategory}</span>
+                                </div>
+                                <div className="event-status">
+                                    <span className={`status-badge status-${event.status}`}>
+                                        {event.status}
+                                    </span>
+                                    {event.submittedAt?.seconds && (
+                                        <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                                            Registered: {new Date(event.submittedAt.seconds * 1000).toLocaleDateString()}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="event-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                        className="btn btn-primary btn-sm interactive"
+                                        onClick={() => handleViewResponse(event)}
+                                    >
+                                        <i className="fas fa-eye"></i> View Response
+                                    </button>
+                                    <button
+                                        className="btn btn-glass btn-sm interactive"
+                                        onClick={() => navigate(`/events/${event.eventId}`)}
+                                    >
+                                        <i className="fas fa-info-circle"></i> Event Details
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </div>
-        </div>
+
+            {/* Response Modal */}
+            {showResponseModal && selectedResponse && (
+                <div className="modal-overlay" onClick={() => setShowResponseModal(false)}>
+                    <div className="modal-content glass-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+                        <div className="modal-header">
+                            <h2>Your Response</h2>
+                            <button className="modal-close" onClick={() => setShowResponseModal(false)}>
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <h3 style={{ marginBottom: '0.5rem' }}>{selectedResponse.eventTitle}</h3>
+                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.9rem', opacity: 0.8 }}>
+                                    <span><i className="far fa-calendar"></i> {selectedResponse.eventDate}</span>
+                                    <span><i className="fas fa-clock"></i> {selectedResponse.eventTime}</span>
+                                </div>
+                            </div>
+
+                            <div className="response-fields" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {Object.entries(selectedResponse.responses || {}).map(([fieldId, field]) => (
+                                    <div key={fieldId} style={{ padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', opacity: 0.9 }}>
+                                            {field.label}
+                                        </label>
+                                        <div>
+                                            {field.type === 'file' ? (
+                                                <a href={field.value} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-glass interactive">
+                                                    <i className="fas fa-file"></i> {field.fileName || 'View File'}
+                                                </a>
+                                            ) : Array.isArray(field.value) ? (
+                                                <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+                                                    {field.value.map((v, i) => <li key={i}>{v}</li>)}
+                                                </ul>
+                                            ) : (
+                                                <p style={{ margin: 0 }}>{field.value}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span className={`status-badge status-${selectedResponse.status}`}>
+                                        {selectedResponse.status}
+                                    </span>
+                                    {selectedResponse.submittedAt?.seconds && (
+                                        <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                                            Submitted: {new Date(selectedResponse.submittedAt.seconds * 1000).toLocaleString()}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-glass interactive" onClick={() => setShowResponseModal(false)}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 

@@ -216,3 +216,97 @@ export const uploadFormFile = async (file, eventId, fieldName) => {
         return { success: false, error: error.message };
     }
 };
+
+/**
+ * Get all event registrations for a specific user
+ * @param {string} userId - User ID
+ * @returns {Promise<{success: boolean, data?: array, error?: string}>}
+ */
+export const getUserEventRegistrations = async (userId) => {
+    try {
+        if (!userId) {
+            return { success: false, error: 'User ID is required' };
+        }
+
+        const allRegistrations = [];
+
+        // Get all events first
+        const eventsSnapshot = await getDocs(collection(db, 'events'));
+
+        // For each event, check if user has a registration
+        for (const eventDoc of eventsSnapshot.docs) {
+            const eventId = eventDoc.id;
+            const eventData = eventDoc.data();
+
+            const q = query(
+                collection(db, 'form_responses', eventId, 'registrations'),
+                where('userId', '==', userId)
+            );
+
+            const registrationsSnapshot = await getDocs(q);
+
+            registrationsSnapshot.forEach((doc) => {
+                allRegistrations.push({
+                    id: doc.id,
+                    eventId,
+                    eventTitle: eventData.title,
+                    eventDate: eventData.date,
+                    eventTime: eventData.time,
+                    eventVenue: eventData.venue,
+                    eventCategory: eventData.category,
+                    ...doc.data()
+                });
+            });
+        }
+
+        // Sort by submission date descending
+        allRegistrations.sort((a, b) => {
+            const timeA = a.submittedAt?.seconds || 0;
+            const timeB = b.submittedAt?.seconds || 0;
+            return timeB - timeA;
+        });
+
+        return { success: true, data: allRegistrations };
+    } catch (error) {
+        console.error('Error getting user registrations:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Get a specific user's response for an event
+ * @param {string} eventId - Event ID
+ * @param {string} userId - User ID
+ * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ */
+export const getUserEventResponse = async (eventId, userId) => {
+    try {
+        if (!eventId || !userId) {
+            return { success: false, error: 'Event ID and User ID are required' };
+        }
+
+        const q = query(
+            collection(db, 'form_responses', eventId, 'registrations'),
+            where('userId', '==', userId)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { success: true, data: null };
+        }
+
+        const doc = querySnapshot.docs[0];
+        return {
+            success: true,
+            data: {
+                id: doc.id,
+                eventId,
+                ...doc.data()
+            }
+        };
+    } catch (error) {
+        console.error('Error getting user event response:', error);
+        return { success: false, error: error.message };
+    }
+};

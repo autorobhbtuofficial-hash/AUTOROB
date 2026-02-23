@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { submitEventRegistration, uploadFormFile } from '../../../services/formService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../services/firebase';
+import { useAuth } from '../../../contexts/AuthContext';
 import './DynamicForm.css';
 
 const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
+    const { currentUser } = useAuth();
     const [formData, setFormData] = useState({});
     const [files, setFiles] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -134,8 +136,14 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                 }
             }
 
-            // Submit form
-            const result = await submitEventRegistration(eventId, eventTitle, responses, null, webhookUrl);
+            // Submit form with user ID
+            const result = await submitEventRegistration(
+                eventId,
+                eventTitle,
+                responses,
+                currentUser?.uid || null,
+                webhookUrl
+            );
 
             if (result.success) {
                 alert('Registration submitted successfully!');

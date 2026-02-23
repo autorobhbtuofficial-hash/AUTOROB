@@ -1,0 +1,476 @@
+/* ── FormResponsesManagement dedicated styles ─────────────────── */
+
+.frm-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Breadcrumb */
+.frm-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.frm-crumb {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 0.25rem 0;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.frm-crumb:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.frm-crumb.active {
+    color: #fff;
+    font-weight: 600;
+    cursor: default;
+    pointer-events: none;
+}
+
+.frm-crumb-sep {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Level wrapper */
+.frm-level {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Header row */
+.frm-level-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.frm-level-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.2rem;
+}
+
+.frm-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+}
+
+.frm-level-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Search bar */
+.frm-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.frm-search-wrap i {
+    position: absolute;
+    left: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.frm-search {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem 0.5rem 2.1rem;
+    color: #fff;
+    font-size: 0.85rem;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.frm-search::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.frm-search:focus {
+    border-color: rgba(99, 102, 241, 0.6);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Loading / empty states */
+.frm-loading,
+.frm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3.5rem 1rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.frm-loading i,
+.frm-empty i {
+    font-size: 2.5rem;
+}
+
+.frm-empty h3 {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+.frm-empty p {
+    font-size: 0.85rem;
+    margin: 0;
+    text-align: center;
+}
+
+/* ── Level 1: Event Cards ────────────────────────────────────── */
+
+.frm-event-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.frm-event-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.frm-event-card:hover {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.frm-event-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.frm-event-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.frm-event-card-body h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.frm-event-meta {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0 0 0.4rem;
+}
+
+.frm-event-form-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 20px;
+    padding: 0.15rem 0.55rem;
+}
+
+.frm-event-card-arrow {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.frm-event-card:hover .frm-event-card-arrow {
+    color: #6366f1;
+    transform: translateX(3px);
+}
+
+/* ── Level 2: Response List ──────────────────────────────────── */
+
+.frm-response-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.frm-response-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0.85rem 1.1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.frm-response-row:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-1px);
+}
+
+.frm-resp-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.frm-resp-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.frm-resp-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.frm-resp-email {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.frm-resp-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.frm-resp-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.frm-resp-arrow {
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 0.75rem;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.frm-response-row:hover .frm-resp-arrow {
+    color: #6366f1;
+    transform: translateX(3px);
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.18);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-approved {
+    background: rgba(16, 185, 129, 0.18);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-rejected {
+    background: rgba(239, 68, 68, 0.18);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ── Modal overrides (response detail) ───────────────────────── */
+.response-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.response-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.response-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 0.3rem;
+}
+
+.response-info p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
+}
+
+.status-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.status-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #fff;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.82rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.response-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.response-field {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.response-field label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 0.35rem;
+}
+
+.field-value p,
+.field-value ul {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.field-value ul {
+    padding-left: 1.25rem;
+}
+
+.file-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: #6366f1;
+    text-decoration: none;
+}
+
+.file-link:hover {
+    text-decoration: underline;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .frm-level-header {
+        flex-direction: column;
+    }
+
+    .frm-level-actions {
+        width: 100%;
+    }
+
+    .frm-search {
+        width: 100%;
+    }
+
+    .frm-resp-date {
+        display: none;
+    }
+}
