@@ -6,6 +6,7 @@ import './Dashboard.css';
 
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('profile');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { currentUser, userRole, logout } = useAuth();
     const navigate = useNavigate();
 
@@ -56,14 +57,34 @@ const Dashboard = () => {
 
     return (
         <div className="dashboard-layout">
+            {/* Mobile Sidebar Toggle */}
+            <button
+                className="sidebar-toggle interactive"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+                <i className={`fas ${isSidebarOpen ? 'fa-times' : 'fa-bars'}`}></i>
+                <span>Menu</span>
+            </button>
+
+            {/* Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="sidebar-overlay"
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
+            )}
+
             {/* Left Sidebar - Clean and minimal */}
-            <aside className="dashboard-sidebar glass-card">
+            <aside className={`dashboard-sidebar glass-card ${isSidebarOpen ? 'open' : ''}`}>
                 <nav className="sidebar-nav">
                     {sidebarItems.map((item) => (
                         <button
                             key={item.id}
                             className={`sidebar-item interactive ${activeTab === item.id ? 'active' : ''}`}
-                            onClick={() => setActiveTab(item.id)}
+                            onClick={() => {
+                                setActiveTab(item.id);
+                                setIsSidebarOpen(false);
+                            }}
                         >
                             <i className={`fas ${item.icon}`}></i>
                             <span>{item.label}</span>

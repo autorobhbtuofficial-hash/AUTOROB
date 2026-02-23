@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
+import { getAuthErrorMessage } from '../utils/authErrors';
+
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
@@ -42,7 +44,7 @@ const Login = () => {
             }
             navigate('/dashboard');
         } catch (err) {
-            setError(err.message || 'Authentication failed');
+            setError(getAuthErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -56,7 +58,7 @@ const Login = () => {
             await loginWithGoogle();
             navigate('/dashboard');
         } catch (err) {
-            setError(err.message || 'Google sign-in failed');
+            setError(getAuthErrorMessage(err));
         } finally {
             setLoading(false);
         }

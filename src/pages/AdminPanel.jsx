@@ -13,6 +13,7 @@ import './AdminPanel.css';
 
 const AdminPanel = () => {
     const [activeSection, setActiveSection] = useState('overview');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
     const { currentUser, userRole, logout } = useAuth();
@@ -115,8 +116,25 @@ const AdminPanel = () => {
 
     return (
         <div className="admin-panel-layout">
+            {/* Mobile Sidebar Toggle */}
+            <button
+                className="admin-sidebar-toggle interactive"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+                <i className={`fas ${isSidebarOpen ? 'fa-times' : 'fa-bars'}`}></i>
+                <span>Menu</span>
+            </button>
+
+            {/* Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="admin-sidebar-overlay"
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
+            )}
+
             {/* Sidebar */}
-            <aside className="admin-sidebar glass-card">
+            <aside className={`admin-sidebar glass-card ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="admin-header">
                     <h2 className="gradient-text">Admin Panel</h2>
                     <span className="role-badge">{userRole.toUpperCase()}</span>
@@ -127,7 +145,10 @@ const AdminPanel = () => {
                         <button
                             key={item.id}
                             className={`admin-nav-item interactive ${activeSection === item.id ? 'active' : ''}`}
-                            onClick={() => setActiveSection(item.id)}
+                            onClick={() => {
+                                setActiveSection(item.id);
+                                setIsSidebarOpen(false);
+                            }}
                         >
                             <i className={`fas ${item.icon}`}></i>
                             <span>{item.label}</span>
@@ -146,6 +167,7 @@ const AdminPanel = () => {
                     </button>
                 </div>
             </aside>
+
 
             {/* Main Content */}
             <main className="admin-main">

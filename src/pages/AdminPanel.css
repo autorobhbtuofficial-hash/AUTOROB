@@ -284,6 +284,33 @@
     color: var(--accent-primary);
 }
 
+/* Mobile Admin Sidebar Toggle */
+.admin-sidebar-toggle {
+    display: none;
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1001;
+    background: var(--accent-secondary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-full);
+    padding: 1rem 1.5rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
     .admin-sidebar {
@@ -297,25 +324,39 @@
 
 @media (max-width: 768px) {
     .admin-panel-layout {
-        flex-direction: column;
+        padding-top: 60px;
+    }
+
+    .admin-sidebar-toggle {
+        display: flex;
     }
 
     .admin-sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
+        position: fixed;
+        left: -100%;
         top: 0;
-        border-right: none;
-        border-bottom: 1px solid var(--glass-border);
+        height: 100vh;
+        width: 280px;
+        z-index: 1000;
+        transition: left var(--transition-base);
+        border-radius: 0;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--glass-border);
+    }
+
+    .admin-sidebar.open {
+        left: 0;
     }
 
     .admin-main {
-        margin-left: 0;
-        padding: 1.5rem;
+        margin-left: 0 !important;
+        padding: 1.5rem 1rem;
     }
 
     .section-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        text-align: center;
+        margin-top: 1rem;
     }
 
     .stats-grid {
@@ -325,7 +366,28 @@
     .action-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .stat-card {
+        padding: 1.5rem;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stat-icon {
+        margin: 0 auto;
+    }
 }
+
+@media (max-width: 480px) {
+    .action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-nav-item span {
+        font-size: 0.9rem;
+    }
+}
+
 
 /* Fix for Select Dropdowns in Dark Mode */
 select {

@@ -158,11 +158,38 @@
 }
 
 @media (max-width: 768px) {
+    .login-page {
+        padding: 1.5rem;
+    }
+
+    .login-container {
+        max-width: 100%;
+    }
+
     .login-card {
-        padding: 2rem 1.5rem;
+        padding: 2.5rem 1.5rem;
+        border-radius: var(--radius-xl);
     }
 
     .login-header h1 {
-        font-size: 1.75rem;
+        font-size: clamp(1.75rem, 5vw, 2rem);
+    }
+
+    .login-form {
+        gap: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        padding: 2rem 1.25rem;
+    }
+
+    .btn-google span {
+        display: none;
+    }
+
+    .btn-google::after {
+        content: 'Sign in with Google';
     }
 }

@@ -208,7 +208,7 @@ const FormBuilder = ({ schema, onChange }) => {
                                                                     onChange={(e) => updateField(field.id, {
                                                                         validation: {
                                                                             ...field.validation,
-                                                                            fileTypes: e.target.value.split(',').map(t => t.trim()).filter(t => t)
+                                                                            fileTypes: e.target.value.split(',').map(t => t.trim())
                                                                         }
                                                                     })}
                                                                     placeholder="e.g., .pdf, .jpg, .png"

@@ -187,35 +187,55 @@ export const deleteFormResponse = async (eventId, responseId) => {
  */
 export const uploadFormFile = async (file, eventId, fieldName) => {
     try {
-        if (!import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || !import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET) {
-            throw new Error('Cloudinary configuration missing');
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+        if (!cloudName || !uploadPreset) {
+            throw new Error('Cloudinary configuration missing. Please check connection and environment variables.');
         }
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+        formData.append('upload_preset', uploadPreset);
         formData.append('folder', `event-forms/${eventId}/${fieldName}`);
 
+        // For images, we use 'image' resource type. For others, 'auto' is fine.
+        // This helps some mobile browsers and Cloudinary's processing.
+        const resourceType = file.type.startsWith('image/') ? 'image' : 'auto';
+
         const response = await fetch(
-            `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+            `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
             {
                 method: 'POST',
-                body: formData
+                body: formData,
+                mode: 'cors',
+                // Important for some mobile browsers to not send session cookies or local credentials
+                credentials: 'omit'
             }
         );
 
-        const data = await response.json();
-
         if (!response.ok) {
-            throw new Error(data.error?.message || 'Upload failed');
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error?.message || `Server returned ${response.status}`);
         }
 
+        const data = await response.json();
         return { success: true, url: data.secure_url };
     } catch (error) {
         console.error('Error uploading form file:', error);
+
+        // Provide user-friendly advice for common mobile network errors
+        if (error.message === 'Failed to fetch') {
+            return {
+                success: false,
+                error: 'Network connection failed. This often happens on mobile data if the connection is unstable, or if you have an AdBlocker/VPN enabled that blocks the upload server. Please try on WiFi or disable AdBlockers.'
+            };
+        }
+
         return { success: false, error: error.message };
     }
 };
+
 
 /**
  * Get all event registrations for a specific user
