@@ -35,6 +35,43 @@ const EventDetail = () => {
         }
     };
 
+    // Parses [text](url) markdown links and \n newlines in description
+    const renderDescription = (text) => {
+        if (!text) return null;
+        const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+        const parts = [];
+        const lines = text.split('\n');
+        lines.forEach((line, lineIdx) => {
+            let lastIndex = 0;
+            let match;
+            linkRegex.lastIndex = 0;
+            while ((match = linkRegex.exec(line)) !== null) {
+                if (match.index > lastIndex) {
+                    parts.push(<span key={`txt-${lineIdx}-${lastIndex}`}>{line.slice(lastIndex, match.index)}</span>);
+                }
+                parts.push(
+                    <a
+                        key={`link-${lineIdx}-${match.index}`}
+                        href={match[2]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: 'var(--primary)', textDecoration: 'underline' }}
+                    >
+                        {match[1]}
+                    </a>
+                );
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < line.length) {
+                parts.push(<span key={`txt-${lineIdx}-end`}>{line.slice(lastIndex)}</span>);
+            }
+            if (lineIdx < lines.length - 1) {
+                parts.push(<br key={`br-${lineIdx}`} />);
+            }
+        });
+        return parts;
+    };
+
     const getEventStatus = (event) => {
         if (!event?.date) return 'upcoming';
         const eventDate = new Date(event.date);
@@ -124,7 +161,7 @@ const EventDetail = () => {
                             transition={{ duration: 0.6, delay: 0.2 }}
                         >
                             <h2>About This Event</h2>
-                            <p className="event-full-description">{event.description}</p>
+                            <p className="event-full-description">{renderDescription(event.description)}</p>
                         </motion.div>
 
                         {/* Sidebar */}
