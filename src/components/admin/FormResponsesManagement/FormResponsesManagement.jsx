@@ -129,9 +129,7 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
 
         responses.forEach(r => {
             const row = [
-                r.submittedAt?.seconds
-                    ? new Date(r.submittedAt.seconds * 1000).toLocaleString()
-                    : 'Unknown',
+                formatDate(r.submittedAt),
                 r.status,
                 ...Array.from(fieldLabels).map(label => {
                     const field = Object.values(r.responses || {}).find(f => f.label === label);
@@ -169,8 +167,22 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const formatDate = (submittedAt) => {
-        if (!submittedAt?.seconds) return 'Unknown';
-        return new Date(submittedAt.seconds * 1000).toLocaleString('en-IN', {
+        if (!submittedAt) return 'Pending...';
+
+        let date;
+        if (typeof submittedAt.toDate === 'function') {
+            date = submittedAt.toDate();
+        } else if (submittedAt.seconds) {
+            date = new Date(submittedAt.seconds * 1000);
+        } else if (submittedAt instanceof Date) {
+            date = submittedAt;
+        } else {
+            date = new Date(submittedAt);
+        }
+
+        if (isNaN(date.getTime())) return 'Unknown Date';
+
+        return date.toLocaleString('en-IN', {
             day: '2-digit', month: 'short', year: 'numeric',
             hour: '2-digit', minute: '2-digit'
         });

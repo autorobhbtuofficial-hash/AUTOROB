@@ -229,7 +229,12 @@ const EventRegistration = () => {
                                     {existingResponse.status}
                                 </span>
                                 <span className="submitted-time">
-                                    Submitted: {new Date(existingResponse.submittedAt?.seconds * 1000).toLocaleString()}
+                                    Submitted: {(() => {
+                                        const ts = existingResponse.submittedAt;
+                                        if (!ts) return 'just now';
+                                        const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+                                        return isNaN(d.getTime()) ? 'Recently' : d.toLocaleString();
+                                    })()}
                                 </span>
                             </div>
                         </div>

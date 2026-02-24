@@ -10,7 +10,8 @@ const FIELD_TYPES = [
     { value: 'dropdown', label: 'Dropdown', icon: 'fa-caret-square-down' },
     { value: 'radio', label: 'Radio Buttons', icon: 'fa-dot-circle' },
     { value: 'checkbox', label: 'Checkboxes', icon: 'fa-check-square' },
-    { value: 'file', label: 'File Upload', icon: 'fa-file-upload' }
+    { value: 'file', label: 'File Upload', icon: 'fa-file-upload' },
+    { value: 'image', label: 'Image / QR', icon: 'fa-qrcode' },
 ];
 
 const FormBuilder = ({ schema, onChange }) => {
@@ -44,6 +45,8 @@ const FormBuilder = ({ schema, onChange }) => {
             placeholder: '',
             required: false,
             options: type === 'dropdown' || type === 'radio' || type === 'checkbox' ? ['Option 1', 'Option 2'] : [],
+            imageUrl: type === 'image' ? '' : undefined,
+            caption: type === 'image' ? '' : undefined,
             validation: {}
         };
         const updatedFields = [...fields, newField];
@@ -235,16 +238,52 @@ const FormBuilder = ({ schema, onChange }) => {
                                                             </div>
                                                         )}
 
-                                                        <div className="form-group checkbox-group">
-                                                            <label>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={field.required}
-                                                                    onChange={(e) => updateField(field.id, { required: e.target.checked })}
-                                                                />
-                                                                <span>Required Field</span>
-                                                            </label>
-                                                        </div>
+                                                        {/* Image/QR specific fields */}
+                                                        {field.type === 'image' && (
+                                                            <>
+                                                                <div className="form-group">
+                                                                    <label>Image URL <span style={{ color: 'var(--accent-primary)' }}>*</span></label>
+                                                                    <input
+                                                                        type="url"
+                                                                        value={field.imageUrl || ''}
+                                                                        onChange={(e) => updateField(field.id, { imageUrl: e.target.value })}
+                                                                        placeholder="https://... (paste your QR/image URL)"
+                                                                    />
+                                                                    <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                                                        Upload the image to any image host (Imgur, ImgBB, Cloudinary) and paste URL here.
+                                                                    </small>
+                                                                </div>
+                                                                <div className="form-group">
+                                                                    <label>Caption (optional)</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={field.caption || ''}
+                                                                        onChange={(e) => updateField(field.id, { caption: e.target.value })}
+                                                                        placeholder="e.g. Scan to Pay ₹299"
+                                                                    />
+                                                                </div>
+                                                                {field.imageUrl && (
+                                                                    <div className="image-preview-thumb">
+                                                                        <img src={field.imageUrl} alt="preview" />
+                                                                        <span>Preview</span>
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        )}
+
+                                                        {/* Required checkbox – not shown for image fields */}
+                                                        {field.type !== 'image' && (
+                                                            <div className="form-group checkbox-group">
+                                                                <label>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={field.required}
+                                                                        onChange={(e) => updateField(field.id, { required: e.target.checked })}
+                                                                    />
+                                                                    <span>Required Field</span>
+                                                                </label>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </motion.div>
@@ -299,6 +338,14 @@ const FormBuilder = ({ schema, onChange }) => {
                                             </div>
                                         ) : field.type === 'file' ? (
                                             <input type="file" disabled />
+                                        ) : field.type === 'image' ? (
+                                            <div className="qr-preview-block">
+                                                {field.imageUrl
+                                                    ? <img src={field.imageUrl} alt={field.label} />
+                                                    : <span className="no-img-msg"><i className="fas fa-image"></i> No image URL set yet</span>
+                                                }
+                                                {field.caption && <p className="qr-caption">{field.caption}</p>}
+                                            </div>
                                         ) : null}
                                     </div>
                                 ))}

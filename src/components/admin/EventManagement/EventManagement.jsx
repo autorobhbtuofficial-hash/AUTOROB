@@ -393,6 +393,7 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
                     <div className="form-section">
                         <h3>Registration Form</h3>
                         <FormBuilder
+                            key={editingEvent?.id || 'new-event'}
                             schema={formData.registrationFormSchema}
                             onChange={(schema) => setFormData({ ...formData, registrationFormSchema: schema })}
                         />

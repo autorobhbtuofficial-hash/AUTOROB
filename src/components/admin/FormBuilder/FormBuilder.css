@@ -391,3 +391,65 @@
         grid-column: 2;
     }
 }
+
+/* ─── Image / QR Field Styles ─── */
+.image-preview-thumb {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.image-preview-thumb img {
+    max-width: 120px;
+    max-height: 120px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.image-preview-thumb span {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.qr-preview-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px dashed var(--accent-primary);
+    border-radius: 10px;
+    margin-top: 0.5rem;
+}
+
+.qr-preview-block img {
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.qr-preview-block .no-img-msg {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.qr-caption {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    text-align: center;
+    font-style: italic;
+}

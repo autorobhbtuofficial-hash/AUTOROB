@@ -97,6 +97,7 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
         // Validate all fields
         const newErrors = {};
         schema.fields.forEach(field => {
+            if (field.type === 'image') return; // display-only, skip
             const error = validateField(field, formData[field.id]);
             if (error) {
                 newErrors[field.id] = error;
@@ -115,6 +116,7 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
             const responses = {};
 
             for (const field of schema.fields) {
+                if (field.type === 'image') continue; // display-only, not a user response
                 if (field.type === 'file' && files[field.id]) {
                     const uploadResult = await uploadFormFile(files[field.id], eventId, field.id);
                     if (uploadResult.success) {
@@ -278,6 +280,26 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                     </div>
                 );
 
+            case 'image':
+                return (
+                    <div className="qr-display-block">
+                        {field.imageUrl ? (
+                            <img
+                                src={field.imageUrl}
+                                alt={field.caption || field.label}
+                                className="qr-display-img"
+                            />
+                        ) : (
+                            <span className="no-img-msg">
+                                <i className="fas fa-image"></i> Image coming soon
+                            </span>
+                        )}
+                        {field.caption && (
+                            <p className="qr-display-caption">{field.caption}</p>
+                        )}
+                    </div>
+                );
+
             default:
                 return null;
         }
@@ -295,21 +317,28 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                 {schema.fields.map((field, index) => (
                     <motion.div
                         key={field.id}
-                        className="form-field"
+                        className={`form-field${field.type === 'image' ? ' form-field--image' : ''}`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
                     >
-                        <label>
-                            {field.label}
-                            {field.required && <span className="required">*</span>}
-                        </label>
-                        {renderField(field)}
-                        {errors[field.id] && (
-                            <span className="error-message">
-                                <i className="fas fa-exclamation-circle"></i>
-                                {errors[field.id]}
-                            </span>
+                        {field.type === 'image' ? (
+                            // Image/QR fields: display-only, no required star or error
+                            renderField(field)
+                        ) : (
+                            <>
+                                <label>
+                                    {field.label}
+                                    {field.required && <span className="required">*</span>}
+                                </label>
+                                {renderField(field)}
+                                {errors[field.id] && (
+                                    <span className="error-message">
+                                        <i className="fas fa-exclamation-circle"></i>
+                                        {errors[field.id]}
+                                    </span>
+                                )}
+                            </>
                         )}
                     </motion.div>
                 ))}

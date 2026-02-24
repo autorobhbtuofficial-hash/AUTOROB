@@ -300,11 +300,14 @@ const EventsTab = () => {
                                     <span className={`status-badge status-${event.status}`}>
                                         {event.status}
                                     </span>
-                                    {event.submittedAt?.seconds && (
-                                        <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-                                            Registered: {new Date(event.submittedAt.seconds * 1000).toLocaleDateString()}
-                                        </span>
-                                    )}
+                                    <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                                        Registered: {(() => {
+                                            const ts = event.submittedAt;
+                                            if (!ts) return '';
+                                            const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+                                            return isNaN(d.getTime()) ? '' : d.toLocaleDateString();
+                                        })()}
+                                    </span>
                                 </div>
                                 <div className="event-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                                     <button
@@ -373,11 +376,14 @@ const EventsTab = () => {
                                     <span className={`status-badge status-${selectedResponse.status}`}>
                                         {selectedResponse.status}
                                     </span>
-                                    {selectedResponse.submittedAt?.seconds && (
-                                        <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-                                            Submitted: {new Date(selectedResponse.submittedAt.seconds * 1000).toLocaleString()}
-                                        </span>
-                                    )}
+                                    <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                                        Submitted: {(() => {
+                                            const ts = selectedResponse.submittedAt;
+                                            if (!ts) return 'processing...';
+                                            const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+                                            return isNaN(d.getTime()) ? 'Recently' : d.toLocaleString();
+                                        })()}
+                                    </span>
                                 </div>
                             </div>
                         </div>
