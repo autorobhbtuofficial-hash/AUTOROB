@@ -102,10 +102,10 @@ const Contact = () => {
                                     <div>
                                         <h4>Phone</h4>
                                         <p>
-                                            <a href="tel:+918090647438">+91 80906 47438</a> (Akshat Agnihotri)
+                                            <a href="tel:+918090647438">+91 80906 47438</a> (Akshat Agnihotri - Final ME)
                                         </p>
                                         <p>
-                                            <a href="tel:+916392452670">+91 63924 52670</a> (Pranjul Singh Yadav)
+                                            <a href="tel:+916392452670">+91 63924 52670</a> (Pranjul Singh Yadav - 3RD ME)
                                         </p>
                                     </div>
                                 </div>
@@ -174,7 +174,7 @@ const Contact = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         required
-                                        placeholder="your.email@example.com"
+                                        placeholder="220110008@hbtu.ac.in"
                                     />
                                 </div>
 

@@ -172,16 +172,6 @@ const EventDetail = () => {
                                     </div>
                                 )}
 
-                                {event.maxParticipants && (
-                                    <div className="info-item">
-                                        <i className="fas fa-users"></i>
-                                        <div>
-                                            <span className="info-label">Max Participants</span>
-                                            <span className="info-value">{event.maxParticipants}</span>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {event.registrationFee !== undefined && (
                                     <div className="info-item">
                                         <i className="fas fa-rupee-sign"></i>

@@ -27,7 +27,6 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
         time: '',
         venue: '',
         registrationFee: 0,
-        maxParticipants: 100,
         isRegistrationOpen: true,
         isFeatured: false,
         allowResponseEdits: false,
@@ -65,7 +64,6 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             time: '',
             venue: '',
             registrationFee: 0,
-            maxParticipants: 100,
             isRegistrationOpen: true,
             isFeatured: false,
             allowResponseEdits: false,
@@ -86,7 +84,6 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             time: event.time || '',
             venue: event.venue || '',
             registrationFee: event.registrationFee || 0,
-            maxParticipants: event.maxParticipants || 100,
             isRegistrationOpen: event.isRegistrationOpen !== undefined ? event.isRegistrationOpen : true,
             isFeatured: event.isFeatured || false,
             allowResponseEdits: event.allowResponseEdits || false,
@@ -137,8 +134,7 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
         const eventData = {
             ...formData,
             imageUrl,
-            registrationFee: Number(formData.registrationFee),
-            maxParticipants: Number(formData.maxParticipants)
+            registrationFee: Number(formData.registrationFee)
         };
 
         let result;
@@ -177,7 +173,7 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
             key: 'currentRegistrations',
             label: 'Registrations',
             sortable: true,
-            render: (value, item) => `${value || 0}/${item.maxParticipants}`
+            render: (value) => `${value || 0}`
         },
         {
             key: 'isRegistrationOpen',
@@ -328,16 +324,6 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
                                 value={formData.registrationFee}
                                 onChange={(e) => setFormData({ ...formData, registrationFee: e.target.value })}
                                 min="0"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Max Participants</label>
-                            <input
-                                type="number"
-                                value={formData.maxParticipants}
-                                onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
-                                min="1"
                             />
                         </div>
                     </div>

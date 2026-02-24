@@ -63,8 +63,8 @@ const Footer = () => {
                         <ul className="footer-contact">
                             <li>
                                 <FaEnvelope />
-                                <a href="mailto:autorob@hbtu.ac.in" className="footer-link">
-                                    autorob@hbtu.ac.in
+                                <a href="mailto:220110008@hbtu.ac.in" className="footer-link">
+                                    220110008@hbtu.ac.in
                                 </a>
                             </li>
                             <li>HBTU Kanpur, Uttar Pradesh</li>
