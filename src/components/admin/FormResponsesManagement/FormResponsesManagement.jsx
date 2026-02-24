@@ -129,8 +129,8 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
 
         responses.forEach(r => {
             const row = [
-                formatDate(r.submittedAt),
-                r.status,
+                `"${formatDate(r.submittedAt).replace(/"/g, '""')}"`,
+                `"${(r.status || '').replace(/"/g, '""')}"`,
                 ...Array.from(fieldLabels).map(label => {
                     const field = Object.values(r.responses || {}).find(f => f.label === label);
                     if (!field) return '';
