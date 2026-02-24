@@ -108,6 +108,14 @@ const EventRegistration = () => {
         );
     }
 
+    // Helper: event-specific contacts or global fallback
+    const eventContacts = event?.registrationFormSchema?.contacts?.length > 0
+        ? event.registrationFormSchema.contacts
+        : [
+            { name: 'Akshat Agnihotri', phone: '+91 80906 47438' },
+            { name: 'Pranjul Singh Yadav', phone: '+91 63924 52670' }
+        ];
+
     // Check if registration is closed
     if (!event.isRegistrationOpen) {
         return (
@@ -117,6 +125,12 @@ const EventRegistration = () => {
                         <i className="fas fa-lock"></i>
                         <h2>Registration Closed</h2>
                         <p>Registration for this event is currently closed.</p>
+                        <div className="contact-info-direct">
+                            <p>For queries, contact:</p>
+                            {eventContacts.map((c, i) => (
+                                <p key={i}><strong>{c.name}:</strong> {c.phone}</p>
+                            ))}
+                        </div>
                         <Link to={`/events/${eventId}`} className="btn btn-glass interactive">
                             <i className="fas fa-arrow-left"></i>
                             Back to Event
@@ -136,11 +150,16 @@ const EventRegistration = () => {
                     <div className="no-form">
                         <i className="fas fa-info-circle"></i>
                         <h2>Registration Available</h2>
-                        <p>To register for this event, please contact the admin.</p>
+                        <p>To register for this event, please contact us directly.</p>
+                        <div className="contact-info-direct" style={{ marginBottom: '1.5rem' }}>
+                            {eventContacts.map((c, i) => (
+                                <p key={i}><strong>{c.name}:</strong> {c.phone}</p>
+                            ))}
+                        </div>
                         <div className="action-buttons">
                             <Link to="/contact" className="btn btn-primary interactive">
                                 <i className="fas fa-envelope"></i>
-                                Contact Admin
+                                Contact Form
                             </Link>
                             <Link to={`/events/${eventId}`} className="btn btn-glass interactive">
                                 <i className="fas fa-arrow-left"></i>

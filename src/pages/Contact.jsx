@@ -91,7 +91,7 @@ const Contact = () => {
                                     </div>
                                     <div>
                                         <h4>Email</h4>
-                                        <a href="mailto:contact@autorob.com">contact@autorob.com</a>
+                                        <a href="mailto:220110008@hbtu.ac.in">220110008@hbtu.ac.in</a>
                                     </div>
                                 </div>
 
@@ -101,7 +101,12 @@ const Contact = () => {
                                     </div>
                                     <div>
                                         <h4>Phone</h4>
-                                        <a href="tel:+919876543210">+91 98765 43210</a>
+                                        <p>
+                                            <a href="tel:+918090647438">+91 80906 47438</a> (Akshat Agnihotri)
+                                        </p>
+                                        <p>
+                                            <a href="tel:+916392452670">+91 63924 52670</a> (Pranjul Singh Yadav)
+                                        </p>
                                     </div>
                                 </div>
 

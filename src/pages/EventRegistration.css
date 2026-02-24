@@ -108,6 +108,22 @@
     color: var(--text-secondary);
 }
 
+.contact-info-direct {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.contact-info-direct p {
+    margin-bottom: 0.5rem !important;
+}
+
+.contact-info-direct strong {
+    color: var(--accent-primary);
+}
+
+
 /* Response View */
 .response-view {
     background: var(--card-bg);

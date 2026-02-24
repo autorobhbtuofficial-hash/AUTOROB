@@ -9,6 +9,7 @@ import './Home.css';
 const Home = () => {
     const [teamData, setTeamData] = useState({ finalYear: [], featured: [] });
     const [events, setEvents] = useState([]);
+    const [featuredEvent, setFeaturedEvent] = useState(null);
     const [gallery, setGallery] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -39,7 +40,19 @@ const Home = () => {
                 // Fetch Events
                 const eventsResult = await getAllEvents();
                 if (eventsResult.success) {
-                    // Sort by date (upcoming/newest) and take 3
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    // Separate upcoming vs all
+                    const upcoming = eventsResult.data
+                        .filter(e => new Date(e.date) >= today)
+                        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                    // Featured = nearest upcoming workshop (category = Workshop) or just nearest
+                    const featuredWorkshop = upcoming.find(e => e.category?.toLowerCase() === 'workshop');
+                    setFeaturedEvent(featuredWorkshop || upcoming[0] || null);
+
+                    // Events section: latest 3 (any)
                     const sortedEvents = eventsResult.data
                         .sort((a, b) => new Date(b.date) - new Date(a.date))
                         .slice(0, 3);
@@ -71,7 +84,66 @@ const Home = () => {
         <main className="home-page">
             <Hero />
 
-            {/* About Section */}
+            {/* ─── Featured Upcoming Event Banner ─── */}
+            {featuredEvent && (
+                <section className="home-section featured-event-banner">
+                    <div className="container">
+                        <motion.div
+                            className="feb-card glass-card"
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            {/* Image Side */}
+                            <div className="feb-image">
+                                <img
+                                    src={featuredEvent.imageUrl || 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800'}
+                                    alt={featuredEvent.title}
+                                    onError={e => { e.target.src = 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800'; }}
+                                />
+                                <div className="feb-badge">
+                                    <i className="fas fa-bolt"></i> Upcoming
+                                </div>
+                            </div>
+
+                            {/* Info Side */}
+                            <div className="feb-info">
+                                <span className="feb-category">{featuredEvent.category || 'Event'}</span>
+                                <h2 className="feb-title gradient-text">{featuredEvent.title}</h2>
+                                <div className="feb-meta">
+                                    {featuredEvent.date && (
+                                        <span>
+                                            <i className="far fa-calendar"></i>
+                                            {new Date(featuredEvent.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        </span>
+                                    )}
+                                    {featuredEvent.time && (
+                                        <span>
+                                            <i className="far fa-clock"></i> {featuredEvent.time}
+                                        </span>
+                                    )}
+                                    {featuredEvent.venue && (
+                                        <span>
+                                            <i className="fas fa-map-marker-alt"></i> {featuredEvent.venue}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="feb-desc">
+                                    {featuredEvent.description?.slice(0, 200)}{featuredEvent.description?.length > 200 ? '...' : ''}
+                                </p>
+                                <Link
+                                    to={`/events/${featuredEvent.id}`}
+                                    className="btn btn-primary interactive"
+                                >
+                                    <i className="fas fa-arrow-right"></i> View Event Details
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </div>
+                </section>
+            )}
+
             <section className="home-section about-preview">
                 <div className="container">
                     <motion.div

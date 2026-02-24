@@ -215,12 +215,21 @@
 }
 
 .registration-note {
-    margin-top: 1rem;
+    margin-top: 1.5rem;
     font-size: 0.85rem;
     color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+.registration-note i {
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--accent-primary);
+}
+
+.registration-note p {
+    margin-bottom: 0.25rem !important;
 }
 
 /* Error/Loading States */
@@ -241,15 +250,8 @@
     color: var(--text-muted);
 }
 
-/* Registration Section */
-.event-registration-section {
-    margin-top: 3rem;
-    padding: 2rem;
-    background: var(--card-bg);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    text-align: center;
-}
+/* Remove unused registration section styles */
+
 
 .register-btn {
     display: inline-flex;

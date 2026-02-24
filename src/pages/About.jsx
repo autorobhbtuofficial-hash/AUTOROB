@@ -77,11 +77,13 @@ const About = () => {
 
                     <div className="timeline">
                         {[
-                            { year: '2014', title: 'Foundation', desc: 'AUTOROB was established at HBTU with a vision to revolutionize robotics education' },
-                            { year: '2016', title: 'First Competition', desc: 'Won our first national robotics competition, marking our presence' },
-                            { year: '2018', title: 'Expansion', desc: 'Expanded to 100+ active members and launched multiple technical workshops' },
-                            { year: '2020', title: 'Innovation Lab', desc: 'Established our dedicated robotics and automation laboratory' },
-                            { year: '2024', title: 'Present Day', desc: 'Leading club with 200+ members, 50+ projects, and national recognition' },
+                            { year: 'Jan 2019', title: 'Foundation', desc: 'AUTOROB was officially established on January 19, 2019 at HBTU Kanpur — born from a passion for robotics and a vision to build something extraordinary.' },
+                            { year: '2019', title: 'First Steps', desc: 'Organised our inaugural robotics workshop and recruited the first batch of passionate members, laying the groundwork for our community.' },
+                            { year: '2020', title: 'Through the Storm', desc: 'Despite the pandemic, the team stayed resilient — conducting virtual sessions, online hackathons, and keeping the spirit of innovation alive.' },
+                            { year: '2021', title: 'First Competition', desc: 'Successfully participated in our first national-level robotics competition, marking AUTOROB on the map.' },
+                            { year: '2022', title: 'Expansion', desc: 'Grew to 100+ active members, launched advanced workshops on embedded systems, computer vision, and IoT.' },
+                            { year: '2023', title: 'Innovation Lab', desc: 'Established a dedicated robotics lab, giving members a hands-on space to build, break, and learn.' },
+                            { year: '2024–25', title: 'Present Day', desc: 'A thriving community of 200+ members with 50+ projects, an official website and ongoing workshops shaping future engineers.' },
                         ].map((item, index) => (
                             <motion.div
                                 key={index}

@@ -196,41 +196,41 @@ const EventDetail = () => {
                             </div>
 
                             {/* Registration Card */}
-                            {event.isRegistrationOpen && status !== 'completed' && (
-                                <div className="registration-card glass-card">
-                                    <h3>Registration</h3>
-                                    <p>Registration is currently open for this event.</p>
-                                    <button className="btn btn-primary interactive btn-block">
-                                        <i className="fas fa-user-plus"></i> Register Now
-                                    </button>
-                                    <p className="registration-note">
-                                        <i className="fas fa-info-circle"></i>
-                                        Contact admin for registration details
-                                    </p>
-                                </div>
-                            )}
-
-                            {!event.isRegistrationOpen && (
-                                <div className="registration-card glass-card">
-                                    <h3>Registration Closed</h3>
-                                    <p>Registration for this event is currently closed.</p>
-                                </div>
-                            )}
+                            <div className="registration-card glass-card">
+                                {event.isRegistrationOpen && status !== 'completed' ? (
+                                    <>
+                                        <h3>Registration</h3>
+                                        <p>Registration is currently open for this event.</p>
+                                        <Link
+                                            to={`/events/${event.id}/register`}
+                                            className="btn btn-primary interactive btn-block"
+                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                                        >
+                                            <i className="fas fa-user-plus"></i> Register for Event
+                                        </Link>
+                                        <div className="registration-note">
+                                            <i className="fas fa-phone-alt"></i>
+                                            <p>For queries, contact:</p>
+                                            {(event.registrationFormSchema?.contacts?.length > 0
+                                                ? event.registrationFormSchema.contacts
+                                                : [
+                                                    { name: 'Akshat Agnihotri', phone: '+91 80906 47438' },
+                                                    { name: 'Pranjul Singh Yadav', phone: '+91 63924 52670' }
+                                                ]
+                                            ).map((c, i) => (
+                                                <p key={i}><strong>{c.name}:</strong> {c.phone}</p>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h3>Registration Closed</h3>
+                                        <p>Registration for this event is currently closed.</p>
+                                    </>
+                                )}
+                            </div>
                         </motion.div>
                     </div>
-
-                    {/* Registration Button */}
-                    {event.isRegistrationOpen && (
-                        <div className="event-registration-section">
-                            <Link
-                                to={`/events/${event.id}/register`}
-                                className="btn btn-primary interactive register-btn"
-                            >
-                                <i className="fas fa-user-plus"></i>
-                                Register for Event
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </section>
 

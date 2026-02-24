@@ -16,20 +16,20 @@ const FIELD_TYPES = [
 const FormBuilder = ({ schema, onChange }) => {
     const [fields, setFields] = useState(schema?.fields || []);
     const [enabled, setEnabled] = useState(schema?.enabled || false);
+    const [contacts, setContacts] = useState(schema?.contacts || []);
     const [editingField, setEditingField] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
 
     // Only sync with schema when it's a completely new schema (different event being edited)
     // This prevents losing work when the parent re-renders
     useEffect(() => {
-        // Only update if schema has different number of fields or enabled state changed
-        // This prevents unnecessary resets during editing
         if (schema && (
             (schema.fields?.length !== fields.length && fields.length === 0) ||
             (schema.enabled !== enabled && fields.length === 0)
         )) {
             setFields(schema.fields || []);
             setEnabled(schema.enabled || false);
+            setContacts(schema.contacts || []);
         }
     }, [schema]);
 
@@ -76,16 +76,35 @@ const FormBuilder = ({ schema, onChange }) => {
         updateSchema(enabled, newFields);
     };
 
-    const updateSchema = (isEnabled, currentFields) => {
+    const updateSchema = (isEnabled, currentFields, currentContacts) => {
         onChange({
             enabled: isEnabled,
-            fields: currentFields
+            fields: currentFields,
+            contacts: currentContacts ?? contacts
         });
     };
 
     const toggleEnabled = (value) => {
         setEnabled(value);
-        updateSchema(value, fields);
+        updateSchema(value, fields, contacts);
+    };
+
+    const addContact = () => {
+        const newContacts = [...contacts, { name: '', phone: '' }];
+        setContacts(newContacts);
+        updateSchema(enabled, fields, newContacts);
+    };
+
+    const updateContact = (index, key, value) => {
+        const newContacts = contacts.map((c, i) => i === index ? { ...c, [key]: value } : c);
+        setContacts(newContacts);
+        updateSchema(enabled, fields, newContacts);
+    };
+
+    const removeContact = (index) => {
+        const newContacts = contacts.filter((_, i) => i !== index);
+        setContacts(newContacts);
+        updateSchema(enabled, fields, newContacts);
     };
 
     return (
@@ -285,6 +304,64 @@ const FormBuilder = ({ schema, onChange }) => {
                                 ))}
                             </div>
                         </div>
+                    )}
+                </div>
+            )}
+
+            {/* ─── Event Contacts (Optional) ─── */}
+            {enabled && (
+                <div className="form-builder-contacts">
+                    <div className="contacts-header">
+                        <h4>
+                            <i className="fas fa-phone-alt"></i> Event Contacts
+                            <span className="optional-badge">Optional</span>
+                        </h4>
+                        <p className="contacts-hint">
+                            Add specific contacts for this event. If none added, defaults to global contact details.
+                        </p>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-glass interactive"
+                            onClick={addContact}
+                        >
+                            <i className="fas fa-plus"></i> Add Contact
+                        </button>
+                    </div>
+
+                    {contacts.length > 0 && (
+                        <div className="contacts-list">
+                            {contacts.map((contact, index) => (
+                                <div key={index} className="contact-entry">
+                                    <input
+                                        type="text"
+                                        placeholder="Contact Name"
+                                        value={contact.name}
+                                        onChange={e => updateContact(index, 'name', e.target.value)}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Phone (e.g. +91 80906 47438)"
+                                        value={contact.phone}
+                                        onChange={e => updateContact(index, 'phone', e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="remove-contact-btn"
+                                        onClick={() => removeContact(index)}
+                                        title="Remove"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {contacts.length === 0 && (
+                        <p className="no-contacts-note">
+                            <i className="fas fa-info-circle"></i>
+                            &nbsp;Defaults to: Akshat Agnihotri (+91 80906 47438) &amp; Pranjul Singh Yadav (+91 63924 52670)
+                        </p>
                     )}
                 </div>
             )}
