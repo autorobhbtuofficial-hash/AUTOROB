@@ -45,8 +45,7 @@ const FormBuilder = ({ schema, onChange }) => {
             placeholder: '',
             required: false,
             options: type === 'dropdown' || type === 'radio' || type === 'checkbox' ? ['Option 1', 'Option 2'] : [],
-            imageUrl: type === 'image' ? '' : undefined,
-            caption: type === 'image' ? '' : undefined,
+            ...(type === 'image' ? { imageUrl: '', caption: '' } : {}),
             validation: {}
         };
         const updatedFields = [...fields, newField];

@@ -14,12 +14,29 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 
+/**
+ * Recursively remove undefined values from an object so Firestore doesn't reject them.
+ */
+const removeUndefined = (obj) => {
+    if (Array.isArray(obj)) {
+        return obj.map(removeUndefined);
+    }
+    if (obj !== null && typeof obj === 'object') {
+        return Object.fromEntries(
+            Object.entries(obj)
+                .filter(([, v]) => v !== undefined)
+                .map(([k, v]) => [k, removeUndefined(v)])
+        );
+    }
+    return obj;
+};
+
 // ==================== EVENTS ====================
 
 export const createEvent = async (eventData) => {
     try {
         const docRef = await addDoc(collection(db, 'events'), {
-            ...eventData,
+            ...removeUndefined(eventData),
             currentRegistrations: 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -49,7 +66,7 @@ export const updateEvent = async (eventId, eventData) => {
     try {
         const eventRef = doc(db, 'events', eventId);
         await updateDoc(eventRef, {
-            ...eventData,
+            ...removeUndefined(eventData),
             updatedAt: serverTimestamp()
         });
         return { success: true };
