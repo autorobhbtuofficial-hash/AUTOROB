@@ -5,22 +5,21 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
+// SECURITY: Never use hardcoded fallback values. All config MUST come from .env
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBgfH38WLBF80QxlpQYnrLXnS6hPnLulF8",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "autorob-hbtu.firebaseapp.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "autorob-hbtu",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "autorob-hbtu.firebasestorage.app",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "57833177443",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:57833177443:web:1301869fba1a803a45d356",
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-72SRNFMLKY"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Debug: Log to check if env vars are loading (remove in production)
-console.log('Firebase Config Check:', {
-    hasApiKey: !!firebaseConfig.apiKey,
-    apiKeyLength: firebaseConfig.apiKey?.length,
-    projectId: firebaseConfig.projectId
-});
+// Validate that env vars are present (fail loudly in dev, silently in prod)
+if (import.meta.env.DEV && !firebaseConfig.apiKey) {
+    console.error('❌ Firebase config missing! Check your .env file.');
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
