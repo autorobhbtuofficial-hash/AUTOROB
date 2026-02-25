@@ -25,6 +25,8 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
+import ProtectedRoute from './components/common/ProtectedRoute/ProtectedRoute';
+import { isElevated } from './utils/roles';
 
 // Styles
 import './styles/globals.css';
@@ -89,15 +91,27 @@ function App() {
                 <Route path="/team" element={<Team />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/:eventId" element={<EventDetail />} />
-                <Route path="/events/:eventId/register" element={<EventRegistration />} />
+                <Route path="/events/:eventId/register" element={
+                  <ProtectedRoute>
+                    <EventRegistration />
+                  </ProtectedRoute>
+                } />
                 <Route path="/library" element={<Library />} />
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/news" element={<News />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin" element={<AdminPanel />} />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute roleCheck={isElevated}>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } />
               </Routes>
             </>
           )}

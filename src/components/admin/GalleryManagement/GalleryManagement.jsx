@@ -8,6 +8,7 @@ import {
     deleteGalleryImage,
     uploadToCloudinary
 } from '../../../services/adminService';
+import { isAdmin, accessDeniedMsg } from '../../../utils/roles';
 import '../EventManagement/EventManagement.css';
 
 const GalleryManagement = forwardRef(({ userRole }, ref) => {
@@ -60,8 +61,8 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const handleDelete = async (image) => {
-        if (userRole !== 'admin') {
-            alert('Only admins can delete images');
+        if (!isAdmin(userRole)) {
+            alert(accessDeniedMsg());
             return;
         }
 
@@ -171,8 +172,8 @@ const GalleryManagement = forwardRef(({ userRole }, ref) => {
                 columns={columns}
                 data={images}
                 onEdit={handleEdit}
-                onDelete={userRole === 'admin' ? handleDelete : null}
-                actions={userRole === 'admin' ? ['edit', 'delete'] : ['edit']}
+                onDelete={isAdmin(userRole) ? handleDelete : null}
+                actions={isAdmin(userRole) ? ['edit', 'delete'] : ['edit']}
             />
 
             {/* Upload Modal */}

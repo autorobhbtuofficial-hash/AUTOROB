@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { isElevated, getRoleLabel } from '../utils/roles';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -92,8 +93,8 @@ const Dashboard = () => {
                     ))}
                 </nav>
 
-                {/* Admin Panel Button - Only for admin/subadmin */}
-                {(userRole === 'admin' || userRole === 'subadmin') && (
+                {/* Control Panel Button - Only for elevated roles */}
+                {isElevated(userRole) && (
                     <button
                         className="sidebar-admin-btn interactive"
                         onClick={() => navigate('/admin')}
@@ -521,6 +522,30 @@ const CertificatesTab = () => {
 
 // Settings Tab Component
 const SettingsTab = ({ currentUser }) => {
+    const [nameValue, setNameValue] = React.useState(currentUser?.displayName || '');
+    const [saving, setSaving] = React.useState(false);
+    const [saveMsg, setSaveMsg] = React.useState(null);
+
+    const handleSave = async () => {
+        if (!nameValue.trim()) {
+            setSaveMsg({ type: 'error', text: 'Display name cannot be empty.' });
+            return;
+        }
+        setSaving(true);
+        setSaveMsg(null);
+        try {
+            const { updateProfile } = await import('firebase/auth');
+            const { auth } = await import('../services/firebase');
+            await updateProfile(auth.currentUser, { displayName: nameValue.trim() });
+            setSaveMsg({ type: 'success', text: 'Changes saved successfully!' });
+        } catch (err) {
+            setSaveMsg({ type: 'error', text: 'Failed to save changes. Please try again.' });
+        } finally {
+            setSaving(false);
+            setTimeout(() => setSaveMsg(null), 3000);
+        }
+    };
+
     return (
         <div className="settings-tab">
             <h1 className="tab-title gradient-text">Settings</h1>
@@ -530,13 +555,37 @@ const SettingsTab = ({ currentUser }) => {
                 <div className="settings-form">
                     <div className="form-group">
                         <label>Display Name</label>
-                        <input type="text" defaultValue={currentUser.displayName || ''} placeholder="Your name" />
+                        <input
+                            type="text"
+                            value={nameValue}
+                            onChange={(e) => setNameValue(e.target.value)}
+                            placeholder="Your name"
+                        />
                     </div>
                     <div className="form-group">
                         <label>Email</label>
                         <input type="email" value={currentUser.email} disabled />
                     </div>
-                    <button className="btn btn-primary">Save Changes</button>
+                    {saveMsg && (
+                        <div style={{
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '6px',
+                            marginBottom: '0.75rem',
+                            fontSize: '0.875rem',
+                            background: saveMsg.type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                            color: saveMsg.type === 'success' ? '#4ade80' : '#f87171',
+                            border: `1px solid ${saveMsg.type === 'success' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`
+                        }}>
+                            {saveMsg.text}
+                        </div>
+                    )}
+                    <button
+                        className="btn btn-primary"
+                        onClick={handleSave}
+                        disabled={saving}
+                    >
+                        {saving ? 'Saving...' : 'Save Changes'}
+                    </button>
                 </div>
             </div>
 

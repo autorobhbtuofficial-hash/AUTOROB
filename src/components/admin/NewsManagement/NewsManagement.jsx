@@ -8,6 +8,7 @@ import {
     deleteNews,
     uploadToCloudinary
 } from '../../../services/adminService';
+import { isAdmin, accessDeniedMsg } from '../../../utils/roles';
 import '../EventManagement/EventManagement.css';
 
 const NewsManagement = forwardRef(({ userRole }, ref) => {
@@ -79,8 +80,8 @@ const NewsManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const handleDelete = async (newsItem) => {
-        if (userRole !== 'admin') {
-            alert('Only admins can delete news');
+        if (!isAdmin(userRole)) {
+            alert(accessDeniedMsg());
             return;
         }
 
@@ -190,8 +191,8 @@ const NewsManagement = forwardRef(({ userRole }, ref) => {
                 columns={columns}
                 data={news}
                 onEdit={handleEdit}
-                onDelete={userRole === 'admin' ? handleDelete : null}
-                actions={userRole === 'admin' ? ['edit', 'delete'] : ['edit']}
+                onDelete={isAdmin(userRole) ? handleDelete : null}
+                actions={isAdmin(userRole) ? ['edit', 'delete'] : ['edit']}
             />
 
             {/* Create/Edit Modal */}

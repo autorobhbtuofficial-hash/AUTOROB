@@ -13,6 +13,31 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
     const [webhookUrl, setWebhookUrl] = useState(null);
+    const [submitError, setSubmitError] = useState(''); // inline error instead of alert()
+
+    // Validate webhook URL — only allow known public HTTPS webhook endpoints
+    const isSafeWebhookUrl = (url) => {
+        if (!url || typeof url !== 'string') return false;
+        try {
+            const parsed = new URL(url);
+            // Must be HTTPS
+            if (parsed.protocol !== 'https:') return false;
+            // Block private/localhost IPs
+            const privatePattern = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+            if (privatePattern.test(parsed.hostname)) return false;
+            // Allow known webhook services only
+            const allowedHosts = [
+                'discord.com', 'discordapp.com',
+                'hooks.slack.com',
+                'hook.eu1.make.com', 'hook.us1.make.com', 'hook.integromat.com',
+                'hooks.zapier.com',
+                'n8n.io',
+            ];
+            return allowedHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h));
+        } catch {
+            return false;
+        }
+    };
 
     // Fetch event data to get webhook config
     useEffect(() => {
@@ -21,8 +46,12 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                 const eventDoc = await getDoc(doc(db, 'events', eventId));
                 if (eventDoc.exists()) {
                     const eventData = eventDoc.data();
-                    if (eventData.webhookConfig?.enabled && eventData.webhookConfig?.url) {
-                        setWebhookUrl(eventData.webhookConfig.url);
+                    const url = eventData.webhookConfig?.url;
+                    // Only use URL if it passes safety check
+                    if (eventData.webhookConfig?.enabled && isSafeWebhookUrl(url)) {
+                        setWebhookUrl(url);
+                    } else if (eventData.webhookConfig?.enabled && url) {
+                        console.warn('Webhook URL blocked — invalid or unsafe:', url);
                     }
                 }
             } catch (error) {
@@ -35,6 +64,22 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
     if (!schema || !schema.enabled || !schema.fields || schema.fields.length === 0) {
         return null;
     }
+
+    // MIME type map — extension → expected MIME
+    const MIME_MAP = {
+        '.pdf': 'application/pdf',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        '.txt': 'text/plain',
+        '.zip': 'application/zip',
+    };
 
     const validateField = (field, value) => {
         if (field.required && (!value || (Array.isArray(value) && value.length === 0))) {
@@ -64,12 +109,21 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                 if (!allowedTypes.includes(fileExt)) {
                     return `Only ${allowedTypes.join(', ')} files are allowed`;
                 }
+                const expectedMime = MIME_MAP[fileExt];
+                if (expectedMime && file.type && file.type !== expectedMime) {
+                    return `File content does not match its extension. Please upload a valid ${fileExt} file.`;
+                }
             }
 
-            const maxSize = field.validation?.maxFileSize || 5; // Default 5MB
+            const maxSize = field.validation?.maxFileSize || 5;
             if (file.size > maxSize * 1024 * 1024) {
                 return `File size must be less than ${maxSize}MB`;
             }
+        }
+
+        // Max length check for text-based fields
+        if (field.validation?.maxLength && typeof value === 'string' && value.length > field.validation.maxLength) {
+            return `${field.label} must be ${field.validation.maxLength} characters or fewer`;
         }
 
         return null;
@@ -110,6 +164,7 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
         }
 
         setSubmitting(true);
+        setSubmitError('');
 
         try {
             // Upload files first
@@ -153,11 +208,11 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                 setFiles({});
                 if (onSuccess) onSuccess();
             } else {
-                throw new Error(result.error);
+                setSubmitError(result.error || 'Failed to submit registration. Please try again.');
             }
         } catch (error) {
             console.error('Submission error:', error);
-            alert('Error submitting registration: ' + error.message);
+            setSubmitError('Failed to submit registration. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -178,6 +233,7 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                         onChange={(e) => handleInputChange(field.id, e.target.value)}
                         placeholder={field.placeholder}
                         required={field.required}
+                        maxLength={field.validation?.maxLength || undefined}
                         className={error ? 'error' : ''}
                     />
                 );
@@ -190,6 +246,7 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                         placeholder={field.placeholder}
                         rows="4"
                         required={field.required}
+                        maxLength={field.validation?.maxLength || undefined}
                         className={error ? 'error' : ''}
                     />
                 );
@@ -343,6 +400,12 @@ const DynamicForm = ({ schema, eventId, eventTitle, onSuccess }) => {
                     </motion.div>
                 ))}
 
+                {submitError && (
+                    <div className="submit-error-banner">
+                        <i className="fas fa-exclamation-triangle" />
+                        {submitError}
+                    </div>
+                )}
                 <button
                     type="submit"
                     className="btn btn-primary interactive btn-block"

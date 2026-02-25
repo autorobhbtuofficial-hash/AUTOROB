@@ -2,8 +2,6 @@
 
 ## IMPORTANT: Update Your Firestore Security Rules
 
-The "Missing or insufficient permissions" error means your Firestore security rules are blocking read access.
-
 ## Steps to Fix:
 
 ### 1. Go to Firebase Console
@@ -20,59 +18,122 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Public read access for events, news, team, gallery
+
+    // ─────────────────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ─────────────────────────────────────────────────────────────
+
+    // Check if the caller is the supreme admin (only this email can change roles)
+    function isSupremeAdmin() {
+      return request.auth != null && request.auth.token.email == 'autorobhbtuofficial@gmail.com';
+    }
+
+    // Check if caller has sensei (admin) role
+    function isSensei() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'sensei';
+    }
+
+    // Check if caller has senpai (subadmin) role
+    function isSenpai() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'senpai';
+    }
+
+    // Check if caller has elevated privileges (sensei OR senpai)
+    function hasElevatedAccess() {
+      return isSensei() || isSenpai();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // PUBLIC COLLECTIONS (read-only for everyone)
+    // ─────────────────────────────────────────────────────────────
+
     match /events/{eventId} {
-      allow read: if true;  // Anyone can read events
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      allow read: if true;
+      allow write: if hasElevatedAccess();
     }
-    
+
     match /news/{newsId} {
-      allow read: if true;  // Anyone can read news
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      allow read: if true;
+      allow write: if hasElevatedAccess();
     }
-    
+
     match /team_members/{memberId} {
-      allow read: if true;  // Anyone can read team members
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      allow read: if true;
+      allow write: if hasElevatedAccess();
     }
-    
+
     match /gallery_images/{imageId} {
-      allow read: if true;  // Anyone can read gallery
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      allow read: if true;
+      allow write: if hasElevatedAccess();
     }
-    
-    // Users collection - users can read their own data
+
+    // ─────────────────────────────────────────────────────────────
+    // USERS COLLECTION
+    // ─────────────────────────────────────────────────────────────
+
     match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
-      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Users can read their own document; sensei can read all
+      allow read: if (request.auth != null && request.auth.uid == userId) || isSensei();
+
+      // Self-update: user can update their own doc BUT cannot change role or isBanned
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && !('role' in request.resource.data.diff(resource.data).affectedKeys())
+        && !('isBanned' in request.resource.data.diff(resource.data).affectedKeys());
+
+      // Only the supreme admin email can change role or isBanned fields
+      allow update: if isSupremeAdmin();
+
+      // Sensei can update anything EXCEPT changing the supreme admin's role
+      allow update: if isSensei()
+        && resource.data.email != 'autorobhbtuofficial@gmail.com';
+
+      // Sensei can read/write all users (create, delete)
+      allow create, delete: if isSensei();
+
+      // Deny all other writes
     }
-    
-    // Registrations - users can read/write their own
-    match /registrations/{registrationId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-        (resource.data.userId == request.auth.uid || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin']);
+
+    // ─────────────────────────────────────────────────────────────
+    // CONTACTS COLLECTION
+    // ─────────────────────────────────────────────────────────────
+
+    match /contacts/{contactId} {
+      // Allow create only if required fields present and within size limits
+      allow create: if request.resource.data.keys().hasAll(['name','email','subject','message'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string && request.resource.data.email.size() <= 200
+        && request.resource.data.subject is string && request.resource.data.subject.size() <= 200
+        && request.resource.data.message is string && request.resource.data.message.size() <= 2000;
+      allow read, update, delete: if isSensei();
     }
-    
-    // Form Responses - users can create and view their own, admins can manage all
-    // Nested structure: form_responses/{eventId}/registrations/{responseId}
+
+    // ─────────────────────────────────────────────────────────────
+    // REGISTRATIONS COLLECTION
+    // ─────────────────────────────────────────────────────────────
+
+    // NOTE: The legacy flat /registrations collection is no longer used.
+    // All registrations are stored under form_responses/{eventId}/registrations/{responseId}.
+
+    // ─────────────────────────────────────────────────────────────
+    // FORM RESPONSES (nested: form_responses/{eventId}/registrations/{responseId})
+    // ─────────────────────────────────────────────────────────────
+
     match /form_responses/{eventId}/registrations/{responseId} {
-      allow read: if request.auth != null && 
-        (resource.data.userId == request.auth.uid || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin']);
+      allow read: if request.auth != null &&
+        (resource.data.userId == request.auth.uid || hasElevatedAccess());
       allow create: if request.auth != null;
-      allow update: if request.auth != null && 
-        (resource.data.userId == request.auth.uid || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin']);
-      allow delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      allow update: if request.auth != null &&
+        (resource.data.userId == request.auth.uid || hasElevatedAccess());
+      allow delete: if hasElevatedAccess();
     }
-    
-    // Deny all other access
+
+    // ─────────────────────────────────────────────────────────────
+    // DENY ALL OTHER ACCESS
+    // ─────────────────────────────────────────────────────────────
+
     match /{document=**} {
       allow read, write: if false;
     }
@@ -86,38 +147,45 @@ service cloud.firestore {
 
 ## What These Rules Do:
 
+✅ **Role Obfuscation**:
+- `sensei` = admin (replaces `admin` keyword — harder to guess)
+- `senpai` = subadmin (replaces `subadmin` keyword — harder to guess)
+
+✅ **Supreme Admin Lock**:
+- Only `autorobhbtuofficial@gmail.com` can change any user's `role` or `isBanned` field
+- Even other `sensei` users CANNOT change roles (except deleting/creating non-critical docs)
+- No one can change the supreme admin's role
+
+✅ **Self-Write Protection**:
+- Users can update their own profile (name, photo etc.)
+- But they CANNOT change their own `role` or `isBanned` — blocked at database level
+
 ✅ **Public Read Access**:
-- Events, News, Team Members, Gallery - Anyone can view
-- No authentication required for public pages
+- Events, News, Team Members, Gallery — Anyone can view
 
-✅ **Admin/SubAdmin Write Access**:
-- Only admin and subadmin can create/edit/delete content
-- Checked via user role in Firestore
-
-✅ **User Data Protection**:
-- Users can only read/write their own data
-- Admins can access all user data
+✅ **Elevated Write Access**:
+- Only `sensei` and `senpai` users can create/edit/delete content
 
 ✅ **Registration Access**:
 - Users can register for events
 - Users can view their own registrations
-- Admins can manage all registrations
+- `sensei`/`senpai` can manage all registrations
 
 ## Security Notes:
 
-⚠️ **Development vs Production**:
-- These rules allow public read access (good for public website)
-- Write access requires authentication + admin role
-- For development, you could temporarily use `allow read, write: if true;` but **NEVER in production**!
+⚠️ **Role Keywords**:
+- Never use `admin` or `subadmin` anywhere in code — use `sensei`/`senpai`
+- These terms are non-obvious and provide security through obscurity
 
-⚠️ **Role-Based Access**:
-- Roles are stored in `/users/{uid}` document
-- First admin must be set manually in Firestore
-- After that, admins can promote other users
+⚠️ **First Time Setup**:
+- Set the first `sensei` role manually:
+  1. Go to Firestore → `users` collection
+  2. Find `autorobhbtuofficial@gmail.com`'s document
+  3. Set `role` field to `sensei`
+- After that, the rules enforce everything automatically
 
 ## After Updating Rules:
 
-1. Refresh your website
-2. Events and News should load without permission errors
-3. Public users can view content
-4. Only admins can edit via admin panel
+1. Publish the rules in Firebase Console
+2. All existing `admin`/`subadmin` roles in Firestore must be updated to `sensei`/`senpai`
+3. Run the one-time migration in Firestore console or code

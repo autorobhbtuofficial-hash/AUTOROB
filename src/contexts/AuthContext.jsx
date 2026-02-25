@@ -24,6 +24,20 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [bannedError, setBannedError] = useState(null);
+
+    // Get full user document from Firestore
+    const getUserDoc = async (uid) => {
+        try {
+            const userDoc = await getDoc(doc(db, 'users', uid));
+            if (userDoc.exists()) {
+                return userDoc.data();
+            }
+            return null;
+        } catch (error) {
+            return null;
+        }
+    };
 
     // Sign up with email and password
     const signup = async (email, password, displayName) => {
@@ -34,7 +48,8 @@ export const AuthProvider = ({ children }) => {
             uid: userCredential.user.uid,
             email,
             displayName,
-            role: 'user',
+            role: 'user',       // NEVER assign elevated roles here — set manually via admin panel only
+            isBanned: false,
             createdAt: new Date(),
             updatedAt: new Date()
         });
@@ -43,8 +58,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Sign in with email and password
-    const login = (email, password) => {
-        return signInWithEmailAndPassword(auth, email, password);
+    const login = async (email, password) => {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+        // Immediately check if banned after login
+        const userData = await getUserDoc(userCredential.user.uid);
+        if (userData?.isBanned) {
+            await signOut(auth);
+            throw new Error('Your account has been suspended. Please contact support.');
+        }
+
+        return userCredential;
     };
 
     // Sign in with Google
@@ -61,9 +85,17 @@ export const AuthProvider = ({ children }) => {
                 displayName: userCredential.user.displayName,
                 photoURL: userCredential.user.photoURL,
                 role: 'user',
+                isBanned: false,
                 createdAt: new Date(),
                 updatedAt: new Date()
             });
+        } else {
+            // Existing Google user — check banned status
+            const userData = userDoc.data();
+            if (userData?.isBanned) {
+                await signOut(auth);
+                throw new Error('Your account has been suspended. Please contact support.');
+            }
         }
 
         return userCredential;
@@ -71,6 +103,7 @@ export const AuthProvider = ({ children }) => {
 
     // Sign out
     const logout = () => {
+        setBannedError(null);
         return signOut(auth);
     };
 
@@ -83,18 +116,30 @@ export const AuthProvider = ({ children }) => {
             }
             return 'user';
         } catch (error) {
-            console.error('Error getting user role:', error);
             return 'user';
         }
     };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            setCurrentUser(user);
             if (user) {
-                const role = await getUserRole(user.uid);
-                setUserRole(role);
+                const userData = await getUserDoc(user.uid);
+
+                // Block banned users — sign them out immediately
+                if (userData?.isBanned) {
+                    await signOut(auth);
+                    setBannedError('Your account has been suspended. Please contact support.');
+                    setCurrentUser(null);
+                    setUserRole(null);
+                    setLoading(false);
+                    return;
+                }
+
+                setCurrentUser(user);
+                setUserRole(userData?.role || 'user');
+                setBannedError(null);
             } else {
+                setCurrentUser(null);
                 setUserRole(null);
             }
             setLoading(false);
@@ -106,6 +151,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         currentUser,
         userRole,
+        bannedError,
         signup,
         login,
         loginWithGoogle,

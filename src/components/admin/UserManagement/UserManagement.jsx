@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import DataTable from '../common/DataTable';
 import Modal from '../common/Modal';
 import { getAllUsers, updateUserRole, banUser, exportToCSV } from '../../../services/adminService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { isAdmin, adminRole, subAdminRole, userRole as baseUserRole } from '../../../utils/roles';
 import '../EventManagement/EventManagement.css';
 
 const UserManagement = () => {
@@ -9,6 +11,7 @@ const UserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { currentUser } = useAuth(); // For self-protection guard
 
     useEffect(() => {
         fetchUsers();
@@ -34,6 +37,11 @@ const UserManagement = () => {
     };
 
     const handleBanToggle = async (user) => {
+        // SELF-PROTECTION: Never allow banning yourself
+        if (user.id === currentUser?.uid) {
+            alert('You cannot ban your own account.');
+            return;
+        }
         const result = await banUser(user.id, !user.isBanned);
         if (result.success) {
             alert(`User ${user.isBanned ? 'unbanned' : 'banned'} successfully!`);
@@ -56,17 +64,26 @@ const UserManagement = () => {
             key: 'role',
             label: 'Role',
             sortable: true,
-            render: (value, user) => (
-                <select
-                    value={value || 'user'}
-                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                    className="role-select"
-                >
-                    <option value="user">User</option>
-                    <option value="subadmin">SubAdmin</option>
-                    <option value="admin">Admin</option>
-                </select>
-            )
+            render: (value, user) => {
+                const isSelf = user.id === currentUser?.uid;
+                return (
+                    <select
+                        value={value || 'user'}
+                        onChange={(e) => {
+                            if (isSelf) { alert('You cannot change your own role.'); return; }
+                            handleRoleChange(user.id, e.target.value);
+                        }}
+                        className="role-select"
+                        disabled={isSelf}
+                        title={isSelf ? 'Cannot change your own role' : ''}
+                        style={isSelf ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                    >
+                        <option value={baseUserRole()}>User</option>
+                        <option value={subAdminRole()}>Co-Head</option>
+                        <option value={adminRole()}>Head</option>
+                    </select>
+                );
+            }
         },
         {
             key: 'createdAt',

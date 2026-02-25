@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { getAllEvents } from '../services/adminService';
 import Footer from '../components/common/Footer/Footer';
 import './Events.css';
@@ -8,6 +9,7 @@ const Events = () => {
     const [events, setEvents] = useState([]);
     const [filter, setFilter] = useState('all');
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchEvents();
@@ -128,7 +130,7 @@ const Events = () => {
                     ) : filteredEvents.length === 0 ? (
                         <div className="no-events">
                             <i className="fas fa-calendar-times" style={{ fontSize: '4rem', opacity: 0.3, marginBottom: '1rem' }}></i>
-                            <p>No events found. Add events from the admin panel!</p>
+                            <p>No events found. Check back soon!</p>
                         </div>
                     ) : (
                         <div className="events-grid">
@@ -199,7 +201,7 @@ const Events = () => {
                                                 )}
                                                 <button
                                                     className="btn btn-primary interactive"
-                                                    onClick={() => window.location.href = `/events/${event.id}`}
+                                                    onClick={() => navigate(`/events/${event.id}`)}
                                                 >
                                                     See More <i className="fas fa-arrow-right"></i>
                                                 </button>

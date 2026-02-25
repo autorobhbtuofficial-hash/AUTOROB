@@ -15,6 +15,8 @@ const Contact = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
+    const [lastSubmit, setLastSubmit] = useState(null); // Rate limiting
+    const COOLDOWN_SECONDS = 60;
 
     const handleChange = (e) => {
         setFormData({
@@ -25,15 +27,43 @@ const Contact = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError('');
+
+        // Client-side rate limit: 1 submit per 60 seconds
+        if (lastSubmit && (Date.now() - lastSubmit) < COOLDOWN_SECONDS * 1000) {
+            const remaining = Math.ceil((COOLDOWN_SECONDS * 1000 - (Date.now() - lastSubmit)) / 1000);
+            setError(`Please wait ${remaining} seconds before sending another message.`);
+            return;
+        }
+
+        // Basic input validation
+        const trimmed = {
+            name: formData.name.trim().slice(0, 100),
+            email: formData.email.trim().slice(0, 200),
+            subject: formData.subject.trim().slice(0, 200),
+            message: formData.message.trim().slice(0, 2000),
+        };
+
+        if (!trimmed.name || !trimmed.email || !trimmed.subject || !trimmed.message) {
+            setError('All fields are required.');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmed.email)) {
+            setError('Please enter a valid email address.');
+            return;
+        }
+
+        setLoading(true);
 
         try {
             await addDoc(collection(db, 'contacts'), {
-                ...formData,
+                ...trimmed,
                 timestamp: new Date(),
                 status: 'unread'
             });
+            setLastSubmit(Date.now());
             setSuccess(true);
             setFormData({ name: '', email: '', subject: '', message: '' });
             setTimeout(() => setSuccess(false), 5000);
@@ -161,6 +191,7 @@ const Contact = () => {
                                         value={formData.name}
                                         onChange={handleChange}
                                         required
+                                        maxLength={100}
                                         placeholder="Your name"
                                     />
                                 </div>
@@ -174,6 +205,7 @@ const Contact = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         required
+                                        maxLength={200}
                                         placeholder="220110008@hbtu.ac.in"
                                     />
                                 </div>
@@ -187,6 +219,7 @@ const Contact = () => {
                                         value={formData.subject}
                                         onChange={handleChange}
                                         required
+                                        maxLength={200}
                                         placeholder="What is this about?"
                                     />
                                 </div>
@@ -200,6 +233,7 @@ const Contact = () => {
                                         onChange={handleChange}
                                         required
                                         rows="6"
+                                        maxLength={2000}
                                         placeholder="Your message..."
                                     ></textarea>
                                 </div>
@@ -207,7 +241,7 @@ const Contact = () => {
                                 {error && <div className="form-error">{error}</div>}
                                 {success && <div className="form-success">Message sent successfully!</div>}
 
-                                <button type="submit" className="btn btn-primary" disabled={loading}>
+                                <button type="submit" className="btn btn-primary" disabled={loading || (lastSubmit && (Date.now() - lastSubmit) < COOLDOWN_SECONDS * 1000)}>
                                     {loading ? 'Sending...' : 'Send Message'}
                                 </button>
                             </form>

@@ -15,7 +15,7 @@ Firebase will handle:
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click **"Add project"**
-3. Enter project name: `autorob-hbtu`
+3. Enter project name: `your-project-id`
 4. Disable Google Analytics (optional)
 5. Click **"Create project"**
 
@@ -109,9 +109,9 @@ service cloud.firestore {
 2. Add your Firebase config to `.env`:
    ```env
    VITE_FIREBASE_API_KEY=AIzaSy...
-   VITE_FIREBASE_AUTH_DOMAIN=autorob-hbtu.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=autorob-hbtu
-   VITE_FIREBASE_STORAGE_BUCKET=autorob-hbtu.appspot.com
+   VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
    VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
    VITE_FIREBASE_APP_ID=1:123456789:web:abc123
    ```

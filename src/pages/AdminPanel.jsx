@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getAnalytics } from '../services/adminService';
+import { isAdmin, isElevated, getRoleLabel } from '../utils/roles';
 import EventManagement from '../components/admin/EventManagement/EventManagement';
 import UserManagement from '../components/admin/UserManagement/UserManagement';
 import TeamManagement from '../components/admin/TeamManagement/TeamManagement';
@@ -27,13 +28,10 @@ const AdminPanel = () => {
     const formResponsesManagementRef = useRef(null);
 
     useEffect(() => {
-        // Check if user is admin or subadmin
-        if (!currentUser || (userRole !== 'admin' && userRole !== 'subadmin')) {
+        if (!currentUser || !isElevated(userRole)) {
             navigate('/dashboard');
             return;
         }
-
-        // Fetch analytics data
         fetchAnalytics();
     }, [currentUser, userRole, navigate]);
 
@@ -56,16 +54,16 @@ const AdminPanel = () => {
     };
 
     const menuItems = [
-        { id: 'overview', icon: 'fa-chart-line', label: 'Overview', roles: ['admin', 'subadmin'] },
-        { id: 'events', icon: 'fa-calendar-alt', label: 'Events', roles: ['admin', 'subadmin'] },
-        { id: 'users', icon: 'fa-users', label: 'Users', roles: ['admin'] },
-        { id: 'team', icon: 'fa-user-friends', label: 'Team', roles: ['admin', 'subadmin'] },
-        { id: 'gallery', icon: 'fa-images', label: 'Gallery', roles: ['admin', 'subadmin'] },
-        { id: 'news', icon: 'fa-newspaper', label: 'News', roles: ['admin', 'subadmin'] },
-        { id: 'responses', icon: 'fa-clipboard-list', label: 'Form Responses', roles: ['admin', 'subadmin'] },
+        { id: 'overview', icon: 'fa-chart-line', label: 'Overview', showFor: isElevated },
+        { id: 'events', icon: 'fa-calendar-alt', label: 'Events', showFor: isElevated },
+        { id: 'users', icon: 'fa-users', label: 'Users', showFor: isAdmin },
+        { id: 'team', icon: 'fa-user-friends', label: 'Team', showFor: isElevated },
+        { id: 'gallery', icon: 'fa-images', label: 'Gallery', showFor: isElevated },
+        { id: 'news', icon: 'fa-newspaper', label: 'News', showFor: isElevated },
+        { id: 'responses', icon: 'fa-clipboard-list', label: 'Form Responses', showFor: isElevated },
     ];
 
-    const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
+    const filteredMenuItems = menuItems.filter(item => item.showFor(userRole));
 
     // Quick Actions handlers
     const handleQuickAction = (action) => {
@@ -110,7 +108,7 @@ const AdminPanel = () => {
         }
     };
 
-    if (!currentUser || (userRole !== 'admin' && userRole !== 'subadmin')) {
+    if (!currentUser || !isElevated(userRole)) {
         return null;
     }
 
@@ -136,8 +134,8 @@ const AdminPanel = () => {
             {/* Sidebar */}
             <aside className={`admin-sidebar glass-card ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="admin-header">
-                    <h2 className="gradient-text">Admin Panel</h2>
-                    <span className="role-badge">{userRole.toUpperCase()}</span>
+                    <h2 className="gradient-text">Control Panel</h2>
+                    <span className="role-badge">{getRoleLabel(userRole)}</span>
                 </div>
 
                 <nav className="admin-nav">

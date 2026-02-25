@@ -16,27 +16,13 @@ const EventRegistration = () => {
     const [existingResponse, setExistingResponse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [authChecked, setAuthChecked] = useState(false);
 
-    // Check auth state first
+    // ProtectedRoute already guarantees currentUser exists — fetch immediately
     useEffect(() => {
-        // Wait a moment for auth to initialize
-        const timer = setTimeout(() => {
-            setAuthChecked(true);
-            if (!currentUser) {
-                navigate(`/login?redirect=/events/${eventId}/register`);
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [currentUser, eventId, navigate]);
-
-    // Fetch event data once auth is checked
-    useEffect(() => {
-        if (authChecked && currentUser) {
+        if (currentUser) {
             fetchEventAndResponse();
         }
-    }, [authChecked, currentUser, eventId]);
+    }, [currentUser, eventId]);
 
     const fetchEventAndResponse = async () => {
         try {
@@ -73,7 +59,8 @@ const EventRegistration = () => {
             }
         } catch (err) {
             console.error('Error fetching data:', err);
-            setError(`Failed to load registration form: ${err.message}`);
+            // Sanitized error — don't expose internal Firebase details
+            setError('Unable to load registration form. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -84,7 +71,7 @@ const EventRegistration = () => {
         navigate(`/events/${eventId}`);
     };
 
-    if (!authChecked || loading) {
+    if (loading) {
         return (
             <div className="loading-container">
                 <div className="loading-spinner">

@@ -13,6 +13,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { adminRole, subAdminRole, userRole as baseUserRole } from '../utils/roles';
 
 /**
  * Recursively remove undefined values from an object so Firestore doesn't reject them.
@@ -44,7 +45,7 @@ export const createEvent = async (eventData) => {
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error('Error creating event:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to create event. Please try again.' };
     }
 };
 
@@ -58,7 +59,7 @@ export const getAllEvents = async () => {
         return { success: true, data: events };
     } catch (error) {
         console.error('Error getting events:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load events.' };
     }
 };
 
@@ -72,7 +73,7 @@ export const updateEvent = async (eventId, eventData) => {
         return { success: true };
     } catch (error) {
         console.error('Error updating event:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update event.' };
     }
 };
 
@@ -82,7 +83,7 @@ export const deleteEvent = async (eventId) => {
         return { success: true };
     } catch (error) {
         console.error('Error deleting event:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to delete event.' };
     }
 };
 
@@ -97,7 +98,7 @@ export const createTeamMember = async (memberData) => {
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error('Error creating team member:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to create team member.' };
     }
 };
 
@@ -112,7 +113,7 @@ export const getAllTeamMembers = async () => {
         return { success: true, data: members };
     } catch (error) {
         console.error('Error getting team members:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load team members.' };
     }
 };
 
@@ -123,7 +124,7 @@ export const updateTeamMember = async (memberId, memberData) => {
         return { success: true };
     } catch (error) {
         console.error('Error updating team member:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update team member.' };
     }
 };
 
@@ -133,7 +134,7 @@ export const deleteTeamMember = async (memberId) => {
         return { success: true };
     } catch (error) {
         console.error('Error deleting team member:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to delete team member.' };
     }
 };
 
@@ -149,18 +150,24 @@ export const getAllUsers = async () => {
         return { success: true, data: users };
     } catch (error) {
         console.error('Error getting users:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load users.' };
     }
 };
 
 export const updateUserRole = async (userId, role) => {
+    // Whitelist valid roles — reject anything else to prevent privilege escalation
+    const VALID_ROLES = [baseUserRole(), subAdminRole(), adminRole()];
+    if (!VALID_ROLES.includes(role)) {
+        console.error('updateUserRole: invalid role attempted');
+        return { success: false, error: 'Invalid role specified.' };
+    }
     try {
         const userRef = doc(db, 'users', userId);
         await updateDoc(userRef, { role });
         return { success: true };
     } catch (error) {
         console.error('Error updating user role:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update user role.' };
     }
 };
 
@@ -171,7 +178,7 @@ export const banUser = async (userId, isBanned) => {
         return { success: true };
     } catch (error) {
         console.error('Error banning user:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update user status.' };
     }
 };
 
@@ -186,7 +193,7 @@ export const createGalleryImage = async (imageData) => {
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error('Error creating gallery image:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to upload image.' };
     }
 };
 
@@ -200,7 +207,7 @@ export const getAllGalleryImages = async () => {
         return { success: true, data: images };
     } catch (error) {
         console.error('Error getting gallery images:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load gallery.' };
     }
 };
 
@@ -211,7 +218,7 @@ export const updateGalleryImage = async (imageId, imageData) => {
         return { success: true };
     } catch (error) {
         console.error('Error updating gallery image:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update image.' };
     }
 };
 
@@ -221,7 +228,7 @@ export const deleteGalleryImage = async (imageId) => {
         return { success: true };
     } catch (error) {
         console.error('Error deleting gallery image:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to delete image.' };
     }
 };
 
@@ -236,7 +243,7 @@ export const createNews = async (newsData) => {
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error('Error creating news:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to create news post.' };
     }
 };
 
@@ -251,7 +258,7 @@ export const getAllNews = async () => {
         return { success: true, data: news };
     } catch (error) {
         console.error('Error getting news:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load news.' };
     }
 };
 
@@ -262,7 +269,7 @@ export const updateNews = async (newsId, newsData) => {
         return { success: true };
     } catch (error) {
         console.error('Error updating news:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update news post.' };
     }
 };
 
@@ -272,7 +279,7 @@ export const deleteNews = async (newsId) => {
         return { success: true };
     } catch (error) {
         console.error('Error deleting news:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to delete news post.' };
     }
 };
 
@@ -280,16 +287,18 @@ export const deleteNews = async (newsId) => {
 
 export const getEventRegistrations = async (eventId) => {
     try {
-        const q = query(collection(db, 'registrations'), where('eventId', '==', eventId));
-        const querySnapshot = await getDocs(q);
+        // Registrations are stored in form_responses subcollection (not flat /registrations)
+        const regSnapshot = await getDocs(
+            collection(db, 'form_responses', eventId, 'registrations')
+        );
         const registrations = [];
-        querySnapshot.forEach((doc) => {
+        regSnapshot.forEach((doc) => {
             registrations.push({ id: doc.id, ...doc.data() });
         });
         return { success: true, data: registrations };
     } catch (error) {
         console.error('Error getting registrations:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load registrations.' };
     }
 };
 
@@ -299,19 +308,27 @@ export const getAnalytics = async () => {
     try {
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const eventsSnapshot = await getDocs(collection(db, 'events'));
-        const registrationsSnapshot = await getDocs(collection(db, 'registrations'));
+
+        // Count total form response registrations across all events
+        let totalRegistrations = 0;
+        for (const eventDoc of eventsSnapshot.docs) {
+            const regSnapshot = await getDocs(
+                collection(db, 'form_responses', eventDoc.id, 'registrations')
+            );
+            totalRegistrations += regSnapshot.size;
+        }
 
         return {
             success: true,
             data: {
                 totalUsers: usersSnapshot.size,
                 totalEvents: eventsSnapshot.size,
-                totalRegistrations: registrationsSnapshot.size
+                totalRegistrations
             }
         };
     } catch (error) {
         console.error('Error getting analytics:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load analytics.' };
     }
 };
 
@@ -319,10 +336,6 @@ export const getAnalytics = async () => {
 
 export const uploadToCloudinary = async (file) => {
     try {
-        console.log('Starting Cloudinary upload...');
-        console.log('Cloud Name:', import.meta.env.VITE_CLOUDINARY_CLOUD_NAME);
-        console.log('Upload Preset:', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-
         if (!import.meta.env.VITE_CLOUDINARY_CLOUD_NAME) {
             throw new Error('Cloudinary cloud name is not configured');
         }
@@ -335,8 +348,6 @@ export const uploadToCloudinary = async (file) => {
         formData.append('file', file);
         formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
 
-        console.log('Uploading file:', file.name, 'Size:', file.size);
-
         const response = await fetch(
             `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
             {
@@ -347,8 +358,6 @@ export const uploadToCloudinary = async (file) => {
 
         const data = await response.json();
 
-        console.log('Cloudinary response:', data);
-
         if (!response.ok) {
             throw new Error(data.error?.message || 'Upload failed');
         }
@@ -357,11 +366,10 @@ export const uploadToCloudinary = async (file) => {
             throw new Error('No URL returned from Cloudinary');
         }
 
-        console.log('Upload successful! URL:', data.secure_url);
         return { success: true, url: data.secure_url };
     } catch (error) {
         console.error('Error uploading to Cloudinary:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to upload image. Please try again.' };
     }
 };
 

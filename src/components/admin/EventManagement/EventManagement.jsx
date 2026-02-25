@@ -12,6 +12,7 @@ import {
     exportToCSV
 } from '../../../services/adminService';
 import FormBuilder from '../FormBuilder/FormBuilder';
+import { isAdmin, accessDeniedMsg } from '../../../utils/roles';
 import './EventManagement.css';
 
 const EventManagement = forwardRef(({ userRole }, ref) => {
@@ -95,8 +96,8 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const handleDelete = async (event) => {
-        if (userRole !== 'admin') {
-            alert('Only admins can delete events');
+        if (!isAdmin(userRole)) {
+            alert(accessDeniedMsg());
             return;
         }
 
@@ -219,8 +220,8 @@ const EventManagement = forwardRef(({ userRole }, ref) => {
                 columns={columns}
                 data={events}
                 onEdit={handleEdit}
-                onDelete={userRole === 'admin' ? handleDelete : null}
-                actions={userRole === 'admin' ? ['edit', 'delete'] : ['edit']}
+                onDelete={isAdmin(userRole) ? handleDelete : null}
+                actions={isAdmin(userRole) ? ['edit', 'delete'] : ['edit']}
             />
 
             {/* Create/Edit Modal */}

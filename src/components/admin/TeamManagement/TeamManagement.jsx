@@ -8,6 +8,7 @@ import {
     deleteTeamMember,
     uploadToCloudinary
 } from '../../../services/adminService';
+import { isAdmin, accessDeniedMsg } from '../../../utils/roles';
 import '../EventManagement/EventManagement.css';
 
 const TeamManagement = forwardRef(({ userRole }, ref) => {
@@ -82,8 +83,8 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
     };
 
     const handleDelete = async (member) => {
-        if (userRole !== 'admin') {
-            alert('Only admins can delete team members');
+        if (!isAdmin(userRole)) {
+            alert(accessDeniedMsg());
             return;
         }
 
@@ -214,8 +215,8 @@ const TeamManagement = forwardRef(({ userRole }, ref) => {
                 columns={columns}
                 data={members}
                 onEdit={handleEdit}
-                onDelete={userRole === 'admin' ? handleDelete : null}
-                actions={userRole === 'admin' ? ['edit', 'delete'] : ['edit']}
+                onDelete={isAdmin(userRole) ? handleDelete : null}
+                actions={isAdmin(userRole) ? ['edit', 'delete'] : ['edit']}
             />
 
             {/* Create/Edit Modal */}

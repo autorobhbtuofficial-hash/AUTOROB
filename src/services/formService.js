@@ -14,45 +14,38 @@ import { db } from './firebase';
 
 /**
  * Send form data to webhook URL (for Google Sheets, Zapier, etc.)
- * @param {string} webhookUrl - Webhook URL
- * @param {object} data - Data to send
- * @returns {Promise<{success: boolean, error?: string}>}
+ * NOTE: Only call after isSafeWebhookUrl() check in DynamicForm.
  */
 const sendToWebhook = async (webhookUrl, data) => {
     try {
         const response = await fetch(webhookUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-
         if (!response.ok) {
-            throw new Error(`Webhook failed: ${response.status} ${response.statusText}`);
+            throw new Error(`Webhook responded with status ${response.status}`);
         }
-
         return { success: true };
     } catch (error) {
         console.error('Webhook error:', error);
-        return { success: false, error: error.message };
+        // Don't surface internal error to caller — webhook failure is non-critical
+        return { success: false, error: 'Webhook delivery failed.' };
     }
 };
 
 // ==================== FORM SUBMISSIONS ====================
 
 /**
- * Submit event registration form
- * @param {string} eventId - Event ID
- * @param {string} eventTitle - Event title (denormalized)
- * @param {object} formResponses - Form field responses { fieldId: { label, value, type } }
- * @param {string|null} userId - User ID if logged in
- * @param {string|null} webhookUrl - Optional webhook URL for integration
- * @returns {Promise<{success: boolean, id?: string, error?: string, webhookSent?: boolean}>}
+ * Submit event registration form.
+ * @param {string} eventId
+ * @param {string} eventTitle
+ * @param {object} formResponses
+ * @param {string|null} userId
+ * @param {string|null} webhookUrl
  */
 export const submitEventRegistration = async (eventId, eventTitle, formResponses, userId = null, webhookUrl = null) => {
     try {
-        // Store responses nested under event: form_responses/{eventId}/registrations/{responseId}
         const docRef = await addDoc(collection(db, 'form_responses', eventId, 'registrations'), {
             userId,
             responses: formResponses,
@@ -60,7 +53,6 @@ export const submitEventRegistration = async (eventId, eventTitle, formResponses
             submittedAt: serverTimestamp()
         });
 
-        // Send to webhook if configured
         let webhookSent = false;
         if (webhookUrl) {
             const webhookData = {
@@ -73,22 +65,19 @@ export const submitEventRegistration = async (eventId, eventTitle, formResponses
             const webhookResult = await sendToWebhook(webhookUrl, webhookData);
             webhookSent = webhookResult.success;
             if (!webhookResult.success) {
-                console.warn('Webhook failed but form was saved to Firebase:', webhookResult.error);
+                console.warn('Webhook failed but form was saved to Firebase.');
             }
         }
 
         return { success: true, id: docRef.id, webhookSent };
     } catch (error) {
         console.error('Error submitting form:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to submit registration. Please try again.' };
     }
 };
 
 /**
- * Get all form responses for a specific event
- * @param {string} eventId - Event ID
- * @param {string} eventTitle - Event title (for denormalization)
- * @returns {Promise<{success: boolean, data?: array, error?: string}>}
+ * Get all form responses for a specific event.
  */
 export const getEventFormResponses = async (eventId, eventTitle = '') => {
     try {
@@ -99,57 +88,41 @@ export const getEventFormResponses = async (eventId, eventTitle = '') => {
         const querySnapshot = await getDocs(q);
         const responses = [];
         querySnapshot.forEach((doc) => {
-            responses.push({
-                id: doc.id,
-                eventId,
-                eventTitle,
-                ...doc.data()
-            });
+            responses.push({ id: doc.id, eventId, eventTitle, ...doc.data() });
         });
         return { success: true, data: responses };
     } catch (error) {
         console.error('Error getting form responses:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load form responses.' };
     }
 };
 
 /**
- * Get all form responses across all events
- * @param {array} events - Array of event objects with id and title
- * @returns {Promise<{success: boolean, data?: array, error?: string}>}
+ * Get all form responses across all events.
  */
 export const getAllFormResponses = async (events = []) => {
     try {
         const allResponses = [];
-
-        // Fetch responses from each event's subcollection
         for (const event of events) {
             const result = await getEventFormResponses(event.id, event.title);
             if (result.success && result.data) {
                 allResponses.push(...result.data);
             }
         }
-
-        // Sort by submittedAt descending
         allResponses.sort((a, b) => {
             const timeA = a.submittedAt?.seconds || 0;
             const timeB = b.submittedAt?.seconds || 0;
             return timeB - timeA;
         });
-
         return { success: true, data: allResponses };
     } catch (error) {
         console.error('Error getting all form responses:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load form responses.' };
     }
 };
 
 /**
- * Update form response (admin only)
- * @param {string} eventId - Event ID
- * @param {string} responseId - Response ID
- * @param {object} data - Data to update
- * @returns {Promise<{success: boolean, error?: string}>}
+ * Update form response (admin only).
  */
 export const updateFormResponse = async (eventId, responseId, data) => {
     try {
@@ -158,15 +131,12 @@ export const updateFormResponse = async (eventId, responseId, data) => {
         return { success: true };
     } catch (error) {
         console.error('Error updating form response:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to update response.' };
     }
 };
 
 /**
- * Delete form response (admin only)
- * @param {string} eventId - Event ID
- * @param {string} responseId - Response ID
- * @returns {Promise<{success: boolean, error?: string}>}
+ * Delete form response (admin only).
  */
 export const deleteFormResponse = async (eventId, responseId) => {
     try {
@@ -174,16 +144,12 @@ export const deleteFormResponse = async (eventId, responseId) => {
         return { success: true };
     } catch (error) {
         console.error('Error deleting form response:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to delete response.' };
     }
 };
 
 /**
- * Upload file for form field
- * @param {File} file - File to upload
- * @param {string} eventId - Event ID for folder organization
- * @param {string} fieldName - Field name for folder organization
- * @returns {Promise<{success: boolean, url?: string, error?: string}>}
+ * Upload file for form field via Cloudinary.
  */
 export const uploadFormFile = async (file, eventId, fieldName) => {
     try {
@@ -191,7 +157,7 @@ export const uploadFormFile = async (file, eventId, fieldName) => {
         const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
         if (!cloudName || !uploadPreset) {
-            throw new Error('Cloudinary configuration missing. Please check connection and environment variables.');
+            return { success: false, error: 'File upload is not configured. Please contact an administrator.' };
         }
 
         const formData = new FormData();
@@ -199,19 +165,10 @@ export const uploadFormFile = async (file, eventId, fieldName) => {
         formData.append('upload_preset', uploadPreset);
         formData.append('folder', `event-forms/${eventId}/${fieldName}`);
 
-        // For images, we use 'image' resource type. For others, 'auto' is fine.
-        // This helps some mobile browsers and Cloudinary's processing.
         const resourceType = file.type.startsWith('image/') ? 'image' : 'auto';
-
         const response = await fetch(
             `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-            {
-                method: 'POST',
-                body: formData,
-                mode: 'cors',
-                // Important for some mobile browsers to not send session cookies or local credentials
-                credentials: 'omit'
-            }
+            { method: 'POST', body: formData, mode: 'cors', credentials: 'omit' }
         );
 
         if (!response.ok) {
@@ -223,48 +180,37 @@ export const uploadFormFile = async (file, eventId, fieldName) => {
         return { success: true, url: data.secure_url };
     } catch (error) {
         console.error('Error uploading form file:', error);
-
-        // Provide user-friendly advice for common mobile network errors
+        // Special case: network failure (e.g. mobile data / AdBlocker)
         if (error.message === 'Failed to fetch') {
             return {
                 success: false,
-                error: 'Network connection failed. This often happens on mobile data if the connection is unstable, or if you have an AdBlocker/VPN enabled that blocks the upload server. Please try on WiFi or disable AdBlockers.'
+                error: 'Network connection failed. Please try on WiFi or disable any AdBlocker/VPN and try again.'
             };
         }
-
-        return { success: false, error: error.message };
+        return { success: false, error: 'File upload failed. Please try again.' };
     }
 };
 
-
 /**
- * Get all event registrations for a specific user
- * @param {string} userId - User ID
- * @returns {Promise<{success: boolean, data?: array, error?: string}>}
+ * Get all event registrations for a specific user.
  */
 export const getUserEventRegistrations = async (userId) => {
     try {
         if (!userId) {
-            return { success: false, error: 'User ID is required' };
+            return { success: false, error: 'User ID is required.' };
         }
 
         const allRegistrations = [];
-
-        // Get all events first
         const eventsSnapshot = await getDocs(collection(db, 'events'));
 
-        // For each event, check if user has a registration
         for (const eventDoc of eventsSnapshot.docs) {
             const eventId = eventDoc.id;
             const eventData = eventDoc.data();
-
             const q = query(
                 collection(db, 'form_responses', eventId, 'registrations'),
                 where('userId', '==', userId)
             );
-
             const registrationsSnapshot = await getDocs(q);
-
             registrationsSnapshot.forEach((doc) => {
                 allRegistrations.push({
                     id: doc.id,
@@ -279,7 +225,6 @@ export const getUserEventRegistrations = async (userId) => {
             });
         }
 
-        // Sort by submission date descending
         allRegistrations.sort((a, b) => {
             const timeA = a.submittedAt?.seconds || 0;
             const timeB = b.submittedAt?.seconds || 0;
@@ -289,44 +234,36 @@ export const getUserEventRegistrations = async (userId) => {
         return { success: true, data: allRegistrations };
     } catch (error) {
         console.error('Error getting user registrations:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load your registrations.' };
     }
 };
 
 /**
- * Get a specific user's response for an event
- * @param {string} eventId - Event ID
- * @param {string} userId - User ID
- * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ * Get a specific user's response for an event.
  */
 export const getUserEventResponse = async (eventId, userId) => {
     try {
         if (!eventId || !userId) {
-            return { success: false, error: 'Event ID and User ID are required' };
+            return { success: false, error: 'Event ID and User ID are required.' };
         }
 
         const q = query(
             collection(db, 'form_responses', eventId, 'registrations'),
             where('userId', '==', userId)
         );
-
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
             return { success: true, data: null };
         }
 
-        const doc = querySnapshot.docs[0];
+        const docSnap = querySnapshot.docs[0];
         return {
             success: true,
-            data: {
-                id: doc.id,
-                eventId,
-                ...doc.data()
-            }
+            data: { id: docSnap.id, eventId, ...docSnap.data() }
         };
     } catch (error) {
         console.error('Error getting user event response:', error);
-        return { success: false, error: error.message };
+        return { success: false, error: 'Failed to load your response.' };
     }
 };

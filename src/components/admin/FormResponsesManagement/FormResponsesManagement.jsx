@@ -6,6 +6,7 @@ import {
     deleteFormResponse
 } from '../../../services/formService';
 import { getAllEvents } from '../../../services/adminService';
+import { isAdmin } from '../../../utils/roles';
 import '../EventManagement/EventManagement.css';
 import './FormResponsesManagement.css';
 
@@ -382,7 +383,7 @@ const FormResponsesManagement = forwardRef(({ userRole }, ref) => {
                         </div>
 
                         <div className="modal-actions">
-                            {userRole === 'admin' && (
+                            {isAdmin(userRole) && (
                                 <button
                                     className="btn btn-danger interactive"
                                     onClick={() => handleDelete(selectedResponse)}
