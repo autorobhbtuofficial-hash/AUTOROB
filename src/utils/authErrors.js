@@ -37,7 +37,13 @@ export const getAuthErrorMessage = (error) => {
         case 'auth/operation-not-allowed':
             return 'This sign-in method is currently disabled.';
         case 'auth/popup-closed-by-user':
-            return 'Sign-in window was closed before completion.';
+            return 'Sign-in window was closed. Please try again.';
+        case 'auth/cancelled-popup-request':
+            return 'A new sign-in request was started. Please complete the sign-in in the popup window.';
+        case 'auth/popup-blocked':
+            return 'Sign-in popup was blocked by your browser. Please allow popups for this site and try again.';
+        case 'auth/account-exists-with-different-credential':
+            return 'An account already exists with the same email but a different sign-in method. Try signing in with email/password.';
         case 'auth/internal-error':
             return 'An internal server error occurred. Please try again.';
 

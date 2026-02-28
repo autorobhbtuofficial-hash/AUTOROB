@@ -74,28 +74,50 @@ export const AuthProvider = ({ children }) => {
     // Sign in with Google
     const loginWithGoogle = async () => {
         const provider = new GoogleAuthProvider();
-        const userCredential = await signInWithPopup(auth, provider);
 
-        // Check if user document exists, if not create one
-        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-        if (!userDoc.exists()) {
-            await setDoc(doc(db, 'users', userCredential.user.uid), {
-                uid: userCredential.user.uid,
-                email: userCredential.user.email,
-                displayName: userCredential.user.displayName,
-                photoURL: userCredential.user.photoURL,
-                role: 'user',
-                isBanned: false,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-        } else {
-            // Existing Google user — check banned status
-            const userData = userDoc.data();
-            if (userData?.isBanned) {
-                await signOut(auth);
-                throw new Error('Your account has been suspended. Please contact support.');
+        let userCredential;
+        try {
+            userCredential = await signInWithPopup(auth, provider);
+        } catch (popupError) {
+            // If the user simply closed the popup or a prior request was cancelled,
+            // treat it as a silent abort — not an actionable error.
+            const silentCodes = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
+            if (silentCodes.includes(popupError.code)) {
+                return null; // Signal to caller that user bailed out gracefully
             }
+            throw popupError; // Re-throw real auth errors (network, blocked popup, etc.)
+        }
+
+        // Firestore profile creation/check — isolated from auth errors.
+        // If this fails (e.g. permissions), the user is still authenticated.
+        try {
+            const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+            if (!userDoc.exists()) {
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    uid: userCredential.user.uid,
+                    email: userCredential.user.email,
+                    displayName: userCredential.user.displayName,
+                    photoURL: userCredential.user.photoURL,
+                    role: 'user',
+                    isBanned: false,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            } else {
+                // Existing Google user — check banned status
+                const userData = userDoc.data();
+                if (userData?.isBanned) {
+                    await signOut(auth);
+                    throw new Error('Your account has been suspended. Please contact support.');
+                }
+            }
+        } catch (firestoreError) {
+            // If this is the banned-user error, re-throw it so Login.jsx can show it
+            if (firestoreError.message?.includes('suspended')) {
+                throw firestoreError;
+            }
+            // Otherwise log and continue — user is already authenticated
+            console.error('Firestore profile sync error (non-critical):', firestoreError);
         }
 
         return userCredential;

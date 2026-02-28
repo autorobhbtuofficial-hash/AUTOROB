@@ -77,7 +77,7 @@ const Hero = () => {
                         <div className="stat-label">Events</div>
                     </div>
                     <div className="stat-card glass-card interactive">
-                        <div className="stat-number gradient-text">10+</div>
+                        <div className="stat-number gradient-text">7+</div>
                         <div className="stat-label">Years</div>
                     </div>
                 </motion.div>

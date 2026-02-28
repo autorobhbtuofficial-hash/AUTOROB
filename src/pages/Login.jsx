@@ -101,8 +101,11 @@ const Login = () => {
         setLoading(true);
 
         try {
-            await loginWithGoogle();
-            navigate('/dashboard');
+            const result = await loginWithGoogle();
+            // result is null when user closed the popup (graceful cancel)
+            if (result) {
+                navigate('/dashboard');
+            }
         } catch (err) {
             setError(getAuthErrorMessage(err));
         } finally {
